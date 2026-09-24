@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://characters/character_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/engineer.png" id="2_tex"]
+[ext_resource type="Resource" path="res://weapons/data/bouncer.tres" id="3_weapon"]
+[ext_resource type="PackedScene" path="res://skills/deploy_turret.tscn" id="4_skill"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "工程师"
+texture = ExtResource("2_tex")
+max_hp = 6
+max_shield = 5
+max_energy = 220
+speed = 95.0
+starting_weapon = ExtResource("3_weapon")
+skill_scene = ExtResource("4_skill")

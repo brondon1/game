@@ -22,6 +22,7 @@ var _player: Node2D
 
 func _ready() -> void:
 	sprite.texture = TEXTURES[kind]
+	BlobShadow.add_to(self, 0.5, Vector2(0, 5))
 	body_entered.connect(_on_body_entered)
 	_player = get_tree().get_first_node_in_group("player") as Node2D
 	# 掉出来时往随机方向弹一下

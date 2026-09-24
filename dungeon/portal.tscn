@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://dungeon/portal.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/portal.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://common/light_texture.tres" id="3_light"]
+[ext_resource type="Material" path="res://common/unshaded.tres" id="4_unshaded"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_portal"]
 radius = 10.0
@@ -13,7 +15,14 @@ monitorable = false
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+material = ExtResource("4_unshaded")
 texture = ExtResource("2_tex")
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.45, 0.8, 1, 1)
+energy = 1.2
+texture = ExtResource("3_light")
+texture_scale = 2.2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_portal")

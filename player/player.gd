@@ -24,6 +24,9 @@ var _offhand_on := false
 var _dash_velocity := Vector2.ZERO
 var _dash_time := 0.0
 var _afterimage_timer := 0.0
+var _walk_time := 0.0
+var _dust_timer := 0.0
+var _sprite_base_y := 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var weapon_pivot: Node2D = $WeaponPivot
@@ -36,6 +39,8 @@ func _ready() -> void:
 	add_to_group("player")
 	var character := GameState.character
 	sprite.texture = character.texture
+	_sprite_base_y = sprite.position.y
+	BlobShadow.add_to(self)
 	base_speed = character.speed
 	skill = character.skill_scene.instantiate()
 	skill.player = self
@@ -56,9 +61,28 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	_update_aim()
+	_animate(delta)
 	if Input.is_action_pressed("shoot"):
 		shoot()
 	_update_timers(delta)
+
+
+## 走路时上下颠一颠、左右晃一晃，并扬起一点灰尘。
+func _animate(delta: float) -> void:
+	if _dash_time > 0.0:
+		return
+	if velocity.length() > 5.0:
+		_walk_time += delta * 14.0
+		sprite.position.y = _sprite_base_y - absf(sin(_walk_time)) * 1.5
+		sprite.rotation = sin(_walk_time) * 0.07
+		_dust_timer -= delta
+		if _dust_timer <= 0.0:
+			_dust_timer = 0.22
+			HitEffect.spawn(get_parent(), global_position, Color(0.7, 0.72, 0.85, 0.45), 3, 0.3)
+	else:
+		_walk_time = 0.0
+		sprite.position.y = _sprite_base_y
+		sprite.rotation = 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -108,7 +132,7 @@ func take_damage(amount: int, _direction := Vector2.ZERO) -> void:
 # ---------- 瞄准 ----------
 
 func _update_aim() -> void:
-	var target: Enemy = _find_auto_aim_target() if auto_aim else null
+	var target: Enemy = find_aim_target() if auto_aim else null
 	if target:
 		aim_direction = global_position.direction_to(target.global_position)
 	else:
@@ -122,7 +146,8 @@ func _update_aim() -> void:
 	weapon_pivot.scale.y = -1.0 if facing_left else 1.0
 
 
-func _find_auto_aim_target() -> Enemy:
+## 视线内、瞄准范围内最近的敌人（自动瞄准和刺客技能都用它）。
+func find_aim_target() -> Enemy:
 	var best: Enemy = null
 	var best_dist := aim_range
 	var space := get_world_2d().direct_space_state

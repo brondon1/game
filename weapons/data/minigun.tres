@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/minigun.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/minigun.wav" id="3_sound"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "加特林"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+muzzle_offset = Vector2(19, -1)
+damage = 2
+fire_interval = 0.06
+energy_cost = 1
+spread_degrees = 18.0
+bullet_speed = 360.0
+bullet_range = 300.0

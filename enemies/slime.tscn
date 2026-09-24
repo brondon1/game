@@ -18,6 +18,7 @@ collision_layer = 4
 collision_mask = 5
 motion_mode = 1
 script = ExtResource("1_script")
+death_color = Color(0.39, 0.78, 0.3, 1)
 max_hp = 10
 speed = 45.0
 

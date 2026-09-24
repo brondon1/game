@@ -184,6 +184,7 @@ func _spawn_shop() -> void:
 	merchant.position = center + Vector2(0, -30)
 	merchant.offset = Vector2(0, -6)
 	_entities.add_child(merchant)
+	BlobShadow.add_to(merchant)
 
 	# 商品：一把随机武器、药水、能量、神秘强化。价格随楼层上涨一点。
 	var floor_bonus := (GameState.current_floor - 1) * 2

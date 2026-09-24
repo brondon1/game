@@ -16,6 +16,8 @@ var _swing_side := 1.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var muzzle: Marker2D = $Muzzle
+@onready var flash: Sprite2D = $Flash
+@onready var flash_light: PointLight2D = $FlashLight
 
 
 func _ready() -> void:
@@ -49,9 +51,25 @@ func fire(team: Bullet.Team, damage_mult := 1.0, fire_rate_mult := 1.0) -> void:
 		get_tree().current_scene.add_child(bullet)
 		bullet.setup(team, muzzle.global_position, global_rotation + offset,
 				data.bullet_speed * randf_range(0.95, 1.05), damage, data.bullet_range, data.piercing)
+		bullet.apply_effects(data)
+	_muzzle_flash()
 	# 后坐力小动画
 	sprite.position.x = -3.0
 	create_tween().tween_property(sprite, "position:x", 0.0, 0.08)
+
+
+## 枪口火光：闪一下就消失，同时短暂照亮周围。
+func _muzzle_flash() -> void:
+	flash.position = muzzle.position + Vector2(3, 0)
+	flash.rotation = randf_range(-0.3, 0.3)
+	flash.show()
+	flash_light.position = muzzle.position
+	flash_light.enabled = true
+	var tween := create_tween()
+	tween.tween_interval(0.05)
+	tween.tween_callback(func() -> void:
+		flash.hide()
+		flash_light.enabled = false)
 
 
 ## 近战挥砍：伤害扇形范围内的所有目标，并打掉范围内的敌方子弹。
@@ -60,6 +78,7 @@ func _swing(team: Bullet.Team, damage: int) -> void:
 	if _swing_tween:
 		_swing_tween.kill()
 	rotation = 0.0
+	sprite.position.x = 0.0
 	var aim := global_rotation
 	var center := global_position
 	var half_arc := deg_to_rad(data.melee_arc_degrees) / 2.0
@@ -94,12 +113,18 @@ func _swing(team: Bullet.Team, damage: int) -> void:
 		Events.screen_shake.emit(1.5)
 	SlashEffect.spawn(get_tree().current_scene, center, aim, data.melee_range, half_arc * 2.0, Color("f4f4f4"))
 
-	# 挥动动画：左右交替挥
-	_swing_side = -_swing_side
-	rotation = -half_arc * _swing_side
 	_swing_tween = create_tween()
-	_swing_tween.tween_property(self, "rotation", half_arc * _swing_side, 0.08)
-	_swing_tween.tween_property(self, "rotation", 0.0, 0.12)
+	if data.melee_arc_degrees <= 60.0:
+		# 扇形很窄的武器（长矛）是往前刺
+		sprite.position.x = -4.0
+		_swing_tween.tween_property(sprite, "position:x", 10.0, 0.06)
+		_swing_tween.tween_property(sprite, "position:x", 0.0, 0.14)
+	else:
+		# 其他近战武器左右交替挥
+		_swing_side = -_swing_side
+		rotation = -half_arc * _swing_side
+		_swing_tween.tween_property(self, "rotation", half_arc * _swing_side, 0.08)
+		_swing_tween.tween_property(self, "rotation", 0.0, 0.12)
 
 
 func _in_arc(center: Vector2, aim: float, half_arc: float, reach: float, point: Vector2) -> bool:

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/crossbow.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/crossbow.wav" id="3_sound"]
+[ext_resource type="Texture2D" path="res://assets/sprites/arrow.png" id="4_bullet"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "追踪弩"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+bullet_texture = ExtResource("4_bullet")
+muzzle_offset = Vector2(15, -1)
+damage = 6
+fire_interval = 0.5
+energy_cost = 1
+spread_degrees = 10.0
+bullet_speed = 230.0
+bullet_range = 420.0
+homing = 5.0

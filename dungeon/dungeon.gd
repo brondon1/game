@@ -4,19 +4,81 @@ extends Node2D
 const TILE_SIZE := 16
 ## 每个房间格子占多少瓦片（房间本身 + 走廊的空间）
 const CELL_TILES := Vector2i(26, 20)
-const FLOOR_TILE := Vector2i(0, 0)
-const WALL_TILE := Vector2i(1, 0)
+# tiles.png 里各种瓦片的位置：第一行是地板（4 种花纹 + 墙下阴影），第二行是墙（墙顶 + 2 种墙面）
+const FLOOR_TILES: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
+const FLOOR_WEIGHTS: Array[float] = [12.0, 1.0, 1.0, 1.5]
+const FLOOR_SHADOW_TILE := Vector2i(4, 0)
+const WALL_TOP_TILE := Vector2i(0, 1)
+const WALL_FACE_TILES: Array[Vector2i] = [Vector2i(1, 1), Vector2i(2, 1)]
+## 地面装饰（不挡路），出现的概率
+const DECOR_TEXTURES: Array[Texture2D] = [
+	preload("res://assets/sprites/decor_bones.png"),
+	preload("res://assets/sprites/decor_skull.png"),
+	preload("res://assets/sprites/decor_grass.png"),
+	preload("res://assets/sprites/decor_rubble.png"),
+]
+const DECOR_CHANCE := 0.035
+## 房间上方的墙面上每隔几格放一个火把
+const TORCH_SPACING := 5
 const BATTLE_ROOM_SIZES: Array[Vector2i] = [Vector2i(13, 11), Vector2i(15, 11), Vector2i(15, 13), Vector2i(17, 13)]
 
 const DOOR_SCENE := preload("res://dungeon/door.tscn")
 const PORTAL_SCENE := preload("res://dungeon/portal.tscn")
 const CRATE_SCENE := preload("res://props/crate.tscn")
+const TORCH_SCENE := preload("res://props/torch.tscn")
+## 铺瓦片：下方是地板的墙画成“墙面”（砖墙正面），其余画成“墙顶”，形成 2.5D 的纵深感；
+## 墙面正下方的地板用带阴影的瓦片，其余地板随机选花纹。
+func _paint_tiles(floor_cells: Dictionary, wall_cells: Dictionary) -> void:
+	var rng := RandomNumberGenerator.new()
+	for c: Vector2i in wall_cells:
+		var is_face := floor_cells.has(c + Vector2i.DOWN)
+		tile_map.set_cell(c, 0, WALL_FACE_TILES[rng.randi() % WALL_FACE_TILES.size()] if is_face else WALL_TOP_TILE)
+	for c: Vector2i in floor_cells:
+		if wall_cells.has(c + Vector2i.UP):
+			tile_map.set_cell(c, 0, FLOOR_SHADOW_TILE)
+		else:
+			tile_map.set_cell(c, 0, FLOOR_TILES[rng.rand_weighted(FLOOR_WEIGHTS)])
+
+
+## 在地板上随机撒一些骨头、杂草、碎石之类的装饰（纯视觉，不挡路）。
+func _place_decor(floor_cells: Dictionary, obstacles: Dictionary) -> void:
+	var blocked := {}
+	for cell: Vector2i in obstacles:
+		for c: Vector2i in obstacles[cell].crates:
+			blocked[c] = true
+	for c: Vector2i in floor_cells:
+		if blocked.has(c) or randf() >= DECOR_CHANCE:
+			continue
+		var decor := Sprite2D.new()
+		decor.texture = DECOR_TEXTURES.pick_random()
+		decor.position = Vector2(c * TILE_SIZE) + Vector2.ONE * TILE_SIZE * 0.5
+		decor.flip_h = randf() < 0.5
+		decor.modulate.a = 0.85
+		decor_root.add_child(decor)
+
+
+## 每个房间上方那排墙面上隔几格挂一个火把（避开门口）。
+func _place_torches(room_rects: Dictionary, wall_cells: Dictionary, floor_cells: Dictionary) -> void:
+	for cell: Vector2i in room_rects:
+		var r: Rect2i = room_rects[cell]
+		var y := r.position.y - 1
+		var center_x := r.position.x + r.size.x / 2
+		for x in range(r.position.x + 2, r.end.x - 1, TORCH_SPACING):
+			var c := Vector2i(x, y)
+			if absi(x - center_x) <= 2 or not wall_cells.has(c) or not floor_cells.has(c + Vector2i.DOWN):
+				continue
+			var torch: Torch = TORCH_SCENE.instantiate()
+			torch.position = Vector2(c * TILE_SIZE) + Vector2(TILE_SIZE * 0.5, TILE_SIZE * 0.6)
+			decor_root.add_child(torch)
+
+
 ## 烘焙导航网格时离墙留出的距离。敌人的碰撞圆半径 5、圆心比脚底（导航用的位置）高 3，
 ## 再留 2 像素余量，这样沿着墙和石柱走时不会蹭到卡住。
 const AGENT_RADIUS := 10.0
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
 @onready var navigation: NavigationRegion2D = $Navigation
+@onready var decor_root: Node2D = $Decor
 @onready var rooms_root: Node2D = $Rooms
 @onready var entities: Node2D = $Entities
 @onready var player: Player = $Entities/Player
@@ -74,10 +136,9 @@ func _build(layout: Dictionary) -> void:
 				var n := c + Vector2i(dx, dy)
 				if not floor_cells.has(n):
 					wall_cells[n] = true
-	for c: Vector2i in floor_cells:
-		tile_map.set_cell(c, 0, FLOOR_TILE)
-	for c: Vector2i in wall_cells:
-		tile_map.set_cell(c, 0, WALL_TILE)
+	_paint_tiles(floor_cells, wall_cells)
+	_place_decor(floor_cells, obstacles)
+	_place_torches(room_rects, wall_cells, floor_cells)
 
 	# 5. 创建房间节点，在每条通道的入口放门，放木箱
 	var room_by_cell := {}

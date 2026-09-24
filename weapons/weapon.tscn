@@ -1,6 +1,9 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://weapons/weapon.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/muzzle_flash.png" id="2_flash"]
+[ext_resource type="Texture2D" path="res://common/light_texture.tres" id="3_light"]
+[ext_resource type="Material" path="res://common/unshaded.tres" id="4_unshaded"]
 
 [node name="Weapon" type="Node2D"]
 script = ExtResource("1_script")
@@ -11,3 +14,15 @@ offset = Vector2(-2, -3)
 
 [node name="Muzzle" type="Marker2D" parent="."]
 position = Vector2(10, -2)
+
+[node name="Flash" type="Sprite2D" parent="."]
+visible = false
+material = ExtResource("4_unshaded")
+texture = ExtResource("2_flash")
+
+[node name="FlashLight" type="PointLight2D" parent="."]
+enabled = false
+color = Color(1, 0.85, 0.5, 1)
+energy = 1.2
+texture = ExtResource("3_light")
+texture_scale = 1.2

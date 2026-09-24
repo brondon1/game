@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/rocket_launcher.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/rocket_fire.wav" id="3_sound"]
+[ext_resource type="Texture2D" path="res://assets/sprites/rocket.png" id="4_bullet"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "火箭筒"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+bullet_texture = ExtResource("4_bullet")
+muzzle_offset = Vector2(18, -2)
+damage = 9
+fire_interval = 0.9
+energy_cost = 4
+bullets_per_shot = 1
+spread_degrees = 2.0
+bullet_speed = 190.0
+bullet_range = 300.0
+explosion_radius = 36.0

@@ -23,6 +23,7 @@ var opened := false
 
 func _ready() -> void:
 	sprite.texture = TEXTURES[kind][0]
+	BlobShadow.add_to(self, 1.2, Vector2(0, 0))
 	label.hide()
 	area.body_entered.connect(_on_body_entered)
 	area.body_exited.connect(_on_body_exited)

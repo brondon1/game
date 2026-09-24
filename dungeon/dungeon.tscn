@@ -17,6 +17,11 @@ tile_set = ExtResource("2_tileset")
 
 [node name="Navigation" type="NavigationRegion2D" parent="."]
 
+[node name="Decor" type="Node2D" parent="."]
+
+[node name="Ambient" type="CanvasModulate" parent="."]
+color = Color(0.58, 0.58, 0.72, 1)
+
 [node name="Rooms" type="Node2D" parent="."]
 
 [node name="Entities" type="Node2D" parent="."]

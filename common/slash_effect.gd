@@ -19,6 +19,7 @@ static func spawn(parent: Node, pos: Vector2, angle: float, p_radius: float, p_a
 
 func _ready() -> void:
 	z_index = 5
+	material = preload("res://common/unshaded.tres")
 	var tween := create_tween().set_parallel()
 	tween.tween_property(self, "scale", Vector2.ONE * 1.15, 0.15)
 	tween.tween_property(self, "modulate:a", 0.0, 0.15)

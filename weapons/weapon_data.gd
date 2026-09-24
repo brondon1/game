@@ -24,6 +24,18 @@ extends Resource
 ## 子弹是否穿透敌人
 @export var piercing := false
 
+@export_group("子弹特效")
+## 子弹贴图，留空用默认的黄色子弹
+@export var bullet_texture: Texture2D
+## 大于 0 时子弹命中（或飞到尽头）会爆炸，对半径内的所有敌人造成伤害
+@export var explosion_radius := 0.0
+## 子弹撞墙后可以反弹的次数
+@export var bounces := 0
+## 命中后让敌人减速的时间（秒）
+@export var slow_duration := 0.0
+## 大于 0 时子弹会追踪附近的敌人，数值是转向速度（弧度/秒）
+@export var homing := 0.0
+
 @export_group("近战")
 ## 勾选后变成近战武器：挥砍扇形范围内的所有敌人，并打掉范围内的敌方子弹。
 ## 近战武器只使用 伤害、射击间隔、能耗 这几个射击参数。

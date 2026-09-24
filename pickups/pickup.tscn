@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="Material" path="res://common/unshaded.tres" id="9_unshaded"]
 [ext_resource type="Script" path="res://pickups/pickup.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/coin.png" id="2_tex"]
 
@@ -13,6 +14,7 @@ monitorable = false
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+material = ExtResource("9_unshaded")
 texture = ExtResource("2_tex")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

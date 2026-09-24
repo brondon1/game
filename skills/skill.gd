@@ -2,6 +2,7 @@ class_name Skill
 extends Node
 ## 角色技能基类。子类重写 _activate()；有持续时间的技能在 _end() 里撤销效果。
 ## 冷却从技能效果结束后才开始计算。
+## 持续时间不固定的技能（比如冲刺到敌人身边）可以在 _activate() 里直接改 _active_left。
 
 @export var display_name := "技能"
 @export_multiline var description := ""
@@ -50,6 +51,14 @@ func _physics_process(delta: float) -> void:
 			_end()
 	elif _cooldown_left > 0.0:
 		_cooldown_left = maxf(_cooldown_left - delta, 0.0)
+
+
+## 技能节点被移除（比如进入下一层时场景重新加载）时，确保持续效果被撤销，
+## 否则像“狂暴”这样临时加的属性会永久留下来。
+func _exit_tree() -> void:
+	if _active_left > 0.0:
+		_active_left = 0.0
+		_end()
 
 
 func _activate() -> void:

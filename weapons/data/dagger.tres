@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/dagger.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/dagger.wav" id="3_sound"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "匕首"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+damage = 3
+fire_interval = 0.18
+energy_cost = 0
+is_melee = true
+melee_range = 22.0
+melee_arc_degrees = 100.0
+knockback = 0.6
+deflects_bullets = true

@@ -1,0 +1,20 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://props/torch.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/torch.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://common/light_texture.tres" id="3_light"]
+[ext_resource type="Material" path="res://common/unshaded.tres" id="4_unshaded"]
+
+[node name="Torch" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = ExtResource("4_unshaded")
+texture = ExtResource("2_tex")
+hframes = 2
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(0, -2)
+color = Color(1, 0.72, 0.42, 1)
+texture = ExtResource("3_light")
+texture_scale = 1.6

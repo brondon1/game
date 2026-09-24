@@ -16,6 +16,7 @@ var _hp := 0
 func _ready() -> void:
 	add_to_group("breakables") # 近战武器靠这个分组找到能砍的东西
 	_hp = max_hp
+	BlobShadow.add_to(self, 1.2, Vector2(0, 0))
 
 
 func take_damage(amount: int, _direction := Vector2.ZERO) -> void:

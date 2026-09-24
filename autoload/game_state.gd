@@ -25,6 +25,9 @@ const CHARACTER_PATHS: Array[String] = [
 	"res://characters/knight.tres",
 	"res://characters/ranger.tres",
 	"res://characters/mage.tres",
+	"res://characters/assassin.tres",
+	"res://characters/engineer.tres",
+	"res://characters/berserker.tres",
 ]
 var characters: Array[CharacterData] = []
 ## 本局使用的角色
@@ -36,6 +39,13 @@ var weapon_pool: Array[WeaponData] = [
 	preload("res://weapons/data/rifle.tres"),
 	preload("res://weapons/data/sword.tres"),
 	preload("res://weapons/data/hammer.tres"),
+	preload("res://weapons/data/rocket_launcher.tres"),
+	preload("res://weapons/data/bouncer.tres"),
+	preload("res://weapons/data/frost_staff.tres"),
+	preload("res://weapons/data/crossbow.tres"),
+	preload("res://weapons/data/minigun.tres"),
+	preload("res://weapons/data/spear.tres"),
+	preload("res://weapons/data/dagger.tres"),
 ]
 
 var current_floor := 1

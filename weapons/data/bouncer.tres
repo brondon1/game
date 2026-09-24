@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/bouncer.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/bounce.wav" id="3_sound"]
+[ext_resource type="Texture2D" path="res://assets/sprites/orb.png" id="4_bullet"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "弹弹枪"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+bullet_texture = ExtResource("4_bullet")
+muzzle_offset = Vector2(13, -2)
+damage = 3
+fire_interval = 0.28
+energy_cost = 1
+spread_degrees = 8.0
+bullet_speed = 260.0
+bullet_range = 700.0
+bounces = 3

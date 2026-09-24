@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/frost_staff.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/frost.wav" id="3_sound"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ice_shard.png" id="4_bullet"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "寒冰法杖"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+bullet_texture = ExtResource("4_bullet")
+muzzle_offset = Vector2(19, -2)
+damage = 4
+fire_interval = 0.35
+energy_cost = 2
+spread_degrees = 4.0
+bullet_speed = 300.0
+bullet_range = 320.0
+slow_duration = 1.5

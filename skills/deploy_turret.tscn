@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skills/deploy_turret.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/skill_turret.wav" id="2_sound"]
+
+[node name="DeployTurret" type="Node"]
+script = ExtResource("1_script")
+sound = ExtResource("2_sound")
+display_name = "部署炮台"
+description = "放下一座自动射击的炮台，持续 8 秒"
+cooldown = 12.0

@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skills/shadow_strike.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/skill_strike.wav" id="2_sound"]
+
+[node name="ShadowStrike" type="Node"]
+script = ExtResource("1_script")
+sound = ExtResource("2_sound")
+display_name = "影袭"
+description = "瞬间冲向最近的敌人，出刀伤害周围所有敌人"
+cooldown = 4.0
+duration = 0.3

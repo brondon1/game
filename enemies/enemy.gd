@@ -18,6 +18,10 @@ const BULLET_SCENE := preload("res://weapons/bullet.tscn")
 @export var energy_drop := 4
 ## 出生前的预警时间（这段时间里半透明、不会动也不会受伤）
 @export var spawn_delay := 0.6
+## 死亡时碎片的颜色
+@export var death_color := Color("f4f4f4")
+## 脚下阴影的大小
+@export var shadow_scale := 1.0
 
 ## 多久重新计算一次绕路路线（秒）
 const REPATH_INTERVAL := 0.25
@@ -32,6 +36,9 @@ var _active := false
 var _dead := false
 var _nav: NavigationAgent2D
 var _repath_timer := 0.0
+var _walk_time := 0.0
+var _slow_time := 0.0
+var _sprite_base_y := 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -41,6 +48,8 @@ func _ready() -> void:
 	max_hp = roundi(max_hp * hp_multiplier)
 	hp = max_hp
 	player = get_tree().get_first_node_in_group("player") as Player
+	_sprite_base_y = sprite.position.y
+	BlobShadow.add_to(self, shadow_scale)
 	_nav = NavigationAgent2D.new()
 	_nav.path_desired_distance = 6.0
 	_nav.target_desired_distance = 6.0
@@ -69,10 +78,29 @@ func _physics_process(delta: float) -> void:
 	if player and not player.is_dead():
 		move_dir = _think(delta)
 		sprite.flip_h = player.global_position.x < global_position.x
-	velocity = move_dir * speed + _knockback
+	var current_speed := speed
+	if _slow_time > 0.0:
+		_slow_time -= delta
+		current_speed *= 0.45
+		if _slow_time <= 0.0:
+			sprite.self_modulate = Color.WHITE
+	velocity = move_dir * current_speed + _knockback
 	_knockback = _knockback.move_toward(Vector2.ZERO, 900.0 * delta)
 	move_and_slide()
+	_animate(delta, move_dir)
 	_try_contact_damage()
+
+
+## 移动时一颠一颠、挤压拉伸，看起来更有弹性。
+func _animate(delta: float, move_dir: Vector2) -> void:
+	if move_dir.length() > 0.1:
+		_walk_time += delta * 12.0
+		var s := sin(_walk_time)
+		sprite.position.y = _sprite_base_y - absf(s) * 1.5
+		sprite.scale = Vector2(1.0 + s * 0.06, 1.0 - s * 0.06)
+	else:
+		sprite.position.y = lerpf(sprite.position.y, _sprite_base_y, 0.3)
+		sprite.scale = sprite.scale.lerp(Vector2.ONE, 0.3)
 
 
 ## AI：返回本帧想移动的方向（长度 0~1）。默认追向玩家。
@@ -101,10 +129,17 @@ func take_damage(amount: int, direction := Vector2.ZERO) -> void:
 	hp -= amount
 	_knockback = direction * knockback_strength
 	_flash()
+	DamageNumber.spawn(get_parent(), global_position, amount)
 	Sound.play(Sound.HIT, -6.0)
 	if hp <= 0:
 		_dead = true
 		_die.call_deferred()
+
+
+## 被冰冻类武器命中：一段时间内移动变慢，身体变成淡蓝色。
+func apply_slow(duration: float) -> void:
+	_slow_time = maxf(_slow_time, duration)
+	sprite.self_modulate = Color(0.6, 0.85, 1.4)
 
 
 ## 朝某个角度发射一颗敌方子弹，子类可复用。
@@ -137,7 +172,7 @@ func _die() -> void:
 		_drop(Pickup.Kind.COIN, 1)
 	if energy_drop > 0:
 		_drop(Pickup.Kind.ENERGY, energy_drop)
-	HitEffect.spawn(get_parent(), global_position, Color("f4f4f4"), 12)
+	HitEffect.spawn(get_parent(), global_position + Vector2(0, -4), death_color, 16, 1.3)
 	Events.screen_shake.emit(1.5)
 	Sound.play(Sound.ENEMY_DIE, -3.0)
 	GameState.kills += 1
