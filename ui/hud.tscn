@@ -125,6 +125,32 @@ text = "手枪  能耗 0"
 horizontal_alignment = 2
 vertical_alignment = 2
 
+[node name="SkillPanel" type="HBoxContainer" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = -34.0
+offset_right = 200.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_constants/separation = 4
+
+[node name="SkillLabel" type="Label" parent="SkillPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 10
+text = "[空格] 技能"
+
+[node name="SkillBar" type="ProgressBar" parent="SkillPanel"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 5)
+layout_mode = 2
+size_flags_vertical = 4
+max_value = 1.0
+
 [node name="Controls" type="Label" parent="."]
 modulate = Color(1, 1, 1, 0.6)
 anchors_preset = 2
@@ -138,7 +164,7 @@ grow_vertical = 0
 theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 8
-text = "WASD 移动 · 鼠标/J 射击 · Q 换枪 · E 拾取 · Esc 暂停"
+text = "WASD 移动 · 左键 射击 · 空格 技能 · Q 换枪 · E 拾取 · Esc 暂停"
 vertical_alignment = 2
 
 [node name="BossPanel" type="VBoxContainer" parent="."]

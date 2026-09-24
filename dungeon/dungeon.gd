@@ -26,6 +26,7 @@ func _ready() -> void:
 	buff_select.buff_chosen.connect(_on_buff_chosen)
 	_build(DungeonGenerator.generate(GameState.room_count()))
 	hud.show_message("第 %d 层" % GameState.current_floor)
+	Sound.play_music(Sound.MUSIC_DUNGEON)
 
 
 # ---------- 生成 ----------
@@ -141,6 +142,7 @@ func _spawn_portal(pos: Vector2) -> void:
 	portal.position = pos
 	entities.add_child(portal)
 	portal.player_entered.connect(_on_portal_entered)
+	Sound.play(Sound.PORTAL, 0.0, 0.0)
 
 
 func _on_portal_entered() -> void:
@@ -152,6 +154,7 @@ func _on_portal_entered() -> void:
 
 
 func _on_buff_chosen(id: String) -> void:
+	Sound.play(Sound.BUFF, 0.0, 0.0)
 	GameState.apply_buff(id)
 	GameState.next_floor()
 	get_tree().paused = false
@@ -165,4 +168,6 @@ func _on_player_died() -> void:
 
 func _finish(won: bool) -> void:
 	GameState.record_run(won)
+	Sound.play_music(null)
+	Sound.play(Sound.VICTORY if won else Sound.GAME_OVER, 0.0, 0.0)
 	game_over.open(won)

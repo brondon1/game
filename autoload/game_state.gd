@@ -19,7 +19,16 @@ const BUFFS := [
 	{"id": "heal", "name": "急救包", "desc": "立即回复 3 点生命"},
 ]
 
-var starting_weapon: WeaponData = preload("res://weapons/data/pistol.tres")
+## 主菜单里可选的角色。新增角色：新建一个 CharacterData 资源，把路径加进来。
+## （角色 → 技能脚本 → 又会用到 GameState，所以这里不能 preload，在 _ready 里再加载）
+const CHARACTER_PATHS: Array[String] = [
+	"res://characters/knight.tres",
+	"res://characters/ranger.tres",
+	"res://characters/mage.tres",
+]
+var characters: Array[CharacterData] = []
+## 本局使用的角色
+var character: CharacterData
 ## 宝箱房会从这里随机掉落武器。新增武器：新建一个 WeaponData 资源并加进来。
 var weapon_pool: Array[WeaponData] = [
 	preload("res://weapons/data/shotgun.tres"),
@@ -52,6 +61,9 @@ var wins := 0
 
 
 func _ready() -> void:
+	for path in CHARACTER_PATHS:
+		characters.append(load(path))
+	character = characters[0]
 	_load_record()
 	new_run()
 
@@ -60,16 +72,16 @@ func new_run() -> void:
 	current_floor = 1
 	coins = 0
 	kills = 0
-	max_hp = 6
+	max_hp = character.max_hp
 	hp = max_hp
-	max_shield = 4
+	max_shield = character.max_shield
 	shield = max_shield
-	max_energy = 180
+	max_energy = character.max_energy
 	energy = max_energy
 	damage_mult = 1.0
 	fire_rate_mult = 1.0
 	speed_mult = 1.0
-	weapons = [starting_weapon]
+	weapons = [character.starting_weapon]
 	weapon_index = 0
 	stats_changed.emit()
 	weapons_changed.emit()
@@ -202,6 +214,7 @@ func record_run(won: bool) -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("record", "best_floor", best_floor)
 	cfg.set_value("record", "wins", wins)
+	cfg.set_value("record", "character", characters.find(character))
 	cfg.save(SAVE_PATH)
 
 
@@ -210,3 +223,5 @@ func _load_record() -> void:
 	if cfg.load(SAVE_PATH) == OK:
 		best_floor = cfg.get_value("record", "best_floor", 0)
 		wins = cfg.get_value("record", "wins", 0)
+		var index: int = cfg.get_value("record", "character", 0)
+		character = characters[clampi(index, 0, characters.size() - 1)]

@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skills/dodge_roll.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/skill_roll.wav" id="2_sound"]
+
+[node name="DodgeRoll" type="Node"]
+script = ExtResource("1_script")
+sound = ExtResource("2_sound")
+display_name = "翻滚"
+description = "快速翻滚，翻滚中无敌"
+cooldown = 1.5
+duration = 0.22

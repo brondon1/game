@@ -75,6 +75,9 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 		_waves_left = 2 if GameState.current_floor == 1 else 3
 	for door in doors:
 		door.set_closed(true)
+	Sound.play(Sound.DOOR)
+	if type == Type.BOSS:
+		Sound.play_music(Sound.MUSIC_BOSS)
 	_spawn_wave.call_deferred()
 
 
@@ -127,6 +130,9 @@ func _clear() -> void:
 	_state = State.CLEARED
 	for door in doors:
 		door.set_closed(false)
+	Sound.play(Sound.DOOR, -4.0)
+	if type == Type.BOSS:
+		Sound.play_music(Sound.MUSIC_DUNGEON)
 	Events.room_cleared.emit(self)
 
 

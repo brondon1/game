@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skills/nova.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/skill_nova.wav" id="2_sound"]
+
+[node name="Nova" type="Node"]
+script = ExtResource("1_script")
+sound = ExtResource("2_sound")
+display_name = "元素新星"
+description = "清除身边的子弹，并向四周放出一圈穿透弹"
+cooldown = 6.0

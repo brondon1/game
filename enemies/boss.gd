@@ -66,6 +66,7 @@ func _fire_ring() -> void:
 	var offset := _shots_left * 0.2 # 每一圈错开一点角度
 	for i in ring_bullets:
 		shoot_bullet(TAU * i / ring_bullets + offset, 90.0)
+	Sound.play(Sound.BOSS_SHOT)
 	Events.screen_shake.emit(2.0)
 
 
@@ -73,3 +74,4 @@ func _fire_fan() -> void:
 	var base := global_position.angle_to_point(player.global_position)
 	for i in fan_bullets:
 		shoot_bullet(base + lerpf(-0.5, 0.5, float(i) / (fan_bullets - 1)), 140.0)
+	Sound.play(Sound.BOSS_SHOT, -4.0)

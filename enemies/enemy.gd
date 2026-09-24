@@ -76,6 +76,7 @@ func take_damage(amount: int, direction := Vector2.ZERO) -> void:
 	hp -= amount
 	_knockback = direction * knockback_strength
 	_flash()
+	Sound.play(Sound.HIT, -6.0)
 	if hp <= 0:
 		_dead = true
 		_die.call_deferred()
@@ -86,6 +87,7 @@ func shoot_bullet(angle: float, bullet_speed: float, damage := 1) -> void:
 	var bullet: Bullet = BULLET_SCENE.instantiate()
 	get_tree().current_scene.add_child(bullet)
 	bullet.setup(Bullet.Team.ENEMY, global_position + Vector2(0, -4), angle, bullet_speed, damage, 400.0)
+	Sound.play(Sound.ENEMY_SHOT, -10.0)
 
 
 func has_line_of_sight_to_player() -> bool:
@@ -112,6 +114,7 @@ func _die() -> void:
 		_drop(Pickup.Kind.ENERGY, energy_drop)
 	HitEffect.spawn(get_parent(), global_position, Color("f4f4f4"), 12)
 	Events.screen_shake.emit(1.5)
+	Sound.play(Sound.ENEMY_DIE, -3.0)
 	GameState.kills += 1
 	died.emit(self)
 	queue_free()

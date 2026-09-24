@@ -35,6 +35,7 @@ func fire(team: Bullet.Team, damage_mult := 1.0, fire_rate_mult := 1.0) -> void:
 		return
 	_cooldown = data.fire_interval / fire_rate_mult
 	var damage := maxi(1, roundi(data.damage * damage_mult))
+	Sound.play(data.sound, -2.0)
 	if data.is_melee:
 		_swing(team, damage)
 		return
@@ -84,6 +85,7 @@ func _swing(team: Bullet.Team, damage: int) -> void:
 			var bullet := node as Bullet
 			if bullet and _in_arc(center, aim, half_arc, reach, bullet.global_position):
 				bullet.destroy()
+				Sound.play(Sound.DEFLECT, -4.0)
 				hit_any = true
 
 	if hit_any:

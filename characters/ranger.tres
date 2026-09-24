@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://characters/character_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ranger.png" id="2_tex"]
+[ext_resource type="Resource" path="res://weapons/data/pistol.tres" id="3_weapon"]
+[ext_resource type="PackedScene" path="res://skills/dodge_roll.tscn" id="4_skill"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "游侠"
+texture = ExtResource("2_tex")
+max_hp = 5
+max_shield = 4
+max_energy = 200
+speed = 110.0
+starting_weapon = ExtResource("3_weapon")
+skill_scene = ExtResource("4_skill")

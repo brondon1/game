@@ -1,0 +1,12 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skills/dual_wield.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/skill_dual.wav" id="2_sound"]
+
+[node name="DualWield" type="Node"]
+script = ExtResource("1_script")
+sound = ExtResource("2_sound")
+display_name = "双持"
+description = "5 秒内同时使用两把武器开火"
+cooldown = 10.0
+duration = 5.0

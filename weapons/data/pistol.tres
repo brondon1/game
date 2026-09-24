@@ -1,12 +1,14 @@
 [gd_resource type="Resource" script_class="WeaponData" format=3]
 
 [ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/shoot.wav" id="3_sound"]
 [ext_resource type="Texture2D" path="res://assets/sprites/pistol.png" id="2_tex"]
 
 [resource]
 script = ExtResource("1_script")
 display_name = "手枪"
 texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
 muzzle_offset = Vector2(10, -2)
 damage = 3
 fire_interval = 0.28

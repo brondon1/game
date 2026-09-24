@@ -6,6 +6,8 @@ extends Resource
 @export var texture: Texture2D
 ## 枪口相对于握把（贴图左侧中点）的位置
 @export var muzzle_offset := Vector2(10, 0)
+## 开火 / 挥砍时的音效
+@export var sound: AudioStream
 
 @export_group("射击")
 @export var damage := 3

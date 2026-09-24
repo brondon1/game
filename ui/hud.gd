@@ -3,6 +3,7 @@ extends CanvasLayer
 ## 游戏内界面：生命/护盾/能量条、楼层和金币、当前武器、Boss 血条、屏幕中央的提示文字。
 
 var _message_tween: Tween
+var _player: Player
 
 @onready var hp_bar: ProgressBar = %HpBar
 @onready var hp_label: Label = %HpLabel
@@ -17,6 +18,8 @@ var _message_tween: Tween
 @onready var boss_bar: ProgressBar = %BossBar
 @onready var message: Label = %Message
 @onready var minimap: Minimap = %Minimap
+@onready var skill_label: Label = %SkillLabel
+@onready var skill_bar: ProgressBar = %SkillBar
 
 
 func _ready() -> void:
@@ -24,6 +27,7 @@ func _ready() -> void:
 	_style_bar(shield_bar, Color("94b0c2"))
 	_style_bar(energy_bar, Color("41a6f6"))
 	_style_bar(boss_bar, Color("ef7d57"))
+	_style_bar(skill_bar, Color("73eff7"))
 	boss_panel.hide()
 	message.modulate.a = 0.0
 	GameState.stats_changed.connect(_refresh_stats)
@@ -31,6 +35,10 @@ func _ready() -> void:
 	Events.boss_health_changed.connect(_on_boss_health_changed)
 	_refresh_stats()
 	_refresh_weapon()
+
+
+func _process(_delta: float) -> void:
+	_update_skill()
 
 
 func show_message(text: String) -> void:
@@ -61,6 +69,25 @@ func _refresh_weapon() -> void:
 		var other := GameState.weapons[(GameState.weapon_index + 1) % GameState.weapons.size()]
 		text += "\n[Q] 切换到 %s" % other.display_name
 	weapon_label.text = text
+
+
+## 技能冷却条：冷却中灰色，可用时黄色，生效中青色。
+func _update_skill() -> void:
+	if _player == null:
+		_player = get_tree().get_first_node_in_group("player") as Player
+	if _player == null or _player.skill == null:
+		return
+	var skill := _player.skill
+	skill_bar.value = skill.charge()
+	if skill.is_active():
+		skill_label.text = "%s 中" % skill.display_name
+		skill_label.modulate = Color("73eff7")
+	elif skill.is_ready():
+		skill_label.text = "[空格] %s" % skill.display_name
+		skill_label.modulate = Color("ffcd75")
+	else:
+		skill_label.text = "[空格] %s" % skill.display_name
+		skill_label.modulate = Color(1, 1, 1, 0.5)
 
 
 func _on_boss_health_changed(hp: int, max_hp: int) -> void:

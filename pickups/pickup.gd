@@ -43,8 +43,11 @@ func _on_body_entered(body: Node2D) -> void:
 	match kind:
 		Kind.COIN:
 			GameState.add_coins(amount)
+			Sound.play(Sound.COIN, -6.0, 0.0)
 		Kind.ENERGY:
 			GameState.add_energy(amount)
+			Sound.play(Sound.ENERGY, -8.0)
 		Kind.HEALTH:
 			GameState.heal(amount)
+			Sound.play(Sound.HEAL, 0.0, 0.0)
 	queue_free()

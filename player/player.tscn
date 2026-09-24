@@ -24,6 +24,10 @@ shape = SubResource("RectangleShape2D_body")
 [node name="WeaponPivot" type="Node2D" parent="."]
 position = Vector2(0, -4)
 
+[node name="Offhand" parent="WeaponPivot" instance=ExtResource("3_weapon")]
+visible = false
+position = Vector2(2, 4)
+
 [node name="Weapon" parent="WeaponPivot" instance=ExtResource("3_weapon")]
 position = Vector2(4, 0)
 
