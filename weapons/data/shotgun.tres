@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/shotgun.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "霰弹枪"
+texture = ExtResource("2_tex")
+muzzle_offset = Vector2(16, -2)
+damage = 3
+fire_interval = 0.55
+energy_cost = 3
+bullets_per_shot = 5
+spread_degrees = 30.0
+bullet_speed = 280.0
+bullet_range = 180.0
+piercing = false

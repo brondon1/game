@@ -1,0 +1,10 @@
+# Godot 4
+.godot/
+/android/
+*.translation
+
+# 导出产物
+/build/
+*.exe
+*.pck
+*.apk

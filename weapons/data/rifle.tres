@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/rifle.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "穿甲步枪"
+texture = ExtResource("2_tex")
+muzzle_offset = Vector2(18, -2)
+damage = 9
+fire_interval = 0.65
+energy_cost = 2
+bullets_per_shot = 1
+spread_degrees = 0.0
+bullet_speed = 520.0
+bullet_range = 450.0
+piercing = true

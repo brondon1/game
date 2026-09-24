@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon.gd" id="1_script"]
+
+[node name="Weapon" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+centered = false
+offset = Vector2(-2, -3)
+
+[node name="Muzzle" type="Marker2D" parent="."]
+position = Vector2(10, -2)
