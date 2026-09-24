@@ -34,6 +34,7 @@ window/stretch/scale_mode="integer"
 [gui]
 
 theme/custom="res://ui/theme.tres"
+fonts/dynamic_fonts/use_oversampling=false
 
 [input]
 

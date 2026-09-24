@@ -17,7 +17,7 @@ const ICONS := {
 @export var weapon: WeaponData
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var price_label: Label = $PriceLabel
+@onready var price_label: Label = $Price/PriceLabel
 @onready var name_label: Label = $NameLabel
 
 
@@ -25,7 +25,7 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	sprite.texture = weapon.texture if kind == Kind.WEAPON else ICONS[kind]
-	price_label.text = "%d 金币" % price
+	price_label.text = str(price)
 	name_label.text = "[E] 购买 " + _item_name()
 	name_label.hide()
 	var tween := create_tween().set_loops()
@@ -37,7 +37,7 @@ func interact(_player: Player) -> void:
 	if not GameState.spend_coins(price):
 		Sound.play(Sound.DENIED, 0.0, 0.0)
 		Events.message.emit("金币不足")
-		price_label.modulate = Color("ef7d57")
+		price_label.modulate = Color("da4e38")
 		create_tween().tween_property(price_label, "modulate", Color.WHITE, 0.5)
 		return
 	Sound.play(Sound.BUY, 0.0, 0.0)

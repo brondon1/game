@@ -28,8 +28,10 @@ theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8, 0.46, 1)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.98, 0.796, 0.243, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
 text = "选择一个强化"
 horizontal_alignment = 1
 

@@ -18,7 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.1, 0.11, 0.17, 1)
+color = Color(0.129, 0.078, 0.106, 1)
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -34,17 +34,16 @@ theme_override_constants/separation = 6
 
 [node name="Title" type="Label" parent="Center/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8, 0.46, 1)
-theme_override_colors/font_outline_color = Color(0.36, 0.15, 0.36, 1)
-theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(0.98, 0.796, 0.243, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_font_sizes/font_size = 36
 text = "像素地牢"
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Center/VBox"]
 modulate = Color(1, 1, 1, 0.7)
 layout_mode = 2
-theme_override_font_sizes/font_size = 10
 text = "一个类元气骑士的 Roguelike 地牢射击"
 horizontal_alignment = 1
 
@@ -58,15 +57,13 @@ alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 9
 text = "骑士"
 horizontal_alignment = 1
 
 [node name="RecordLabel" type="Label" parent="Center/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.45, 0.94, 0.97, 1)
-theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.447, 0.839, 0.808, 1)
 text = "准备好进入地牢了吗？"
 horizontal_alignment = 1
 

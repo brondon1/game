@@ -8,21 +8,20 @@ extends Control
 const ROOM_SIZE := Vector2(10, 7)
 const SPACING := Vector2(15, 11)
 
-const COLOR_BACKGROUND := Color(0.1, 0.11, 0.17, 0.75)
-const COLOR_UNKNOWN := Color("333c57")
-const COLOR_VISITED := Color("566c86")
-const COLOR_CURRENT := Color("94b0c2")
-const COLOR_OUTLINE := Color("1a1c2c")
-const COLOR_CORRIDOR := Color("566c86")
-const COLOR_PLAYER := Color("73eff7")
+## 配色取自 0x72 素材包：暖灰石头色的房间、金色宝箱、绿色商店、红色 Boss
+const COLOR_UNKNOWN := Color("483b3a")
+const COLOR_VISITED := Color("775c55")
+const COLOR_CURRENT := Color("d3bfa9")
+const COLOR_OUTLINE := Color("222222")
+const COLOR_CORRIDOR := Color("775c55")
+const COLOR_PLAYER := Color("72d6ce")
 const ICON_COLORS := {
-	Room.Type.CHEST: Color("ffcd75"),
-	Room.Type.BOSS: Color("b13e53"),
-	Room.Type.SHOP: Color("38b764"),
+	Room.Type.CHEST: Color("facb3e"),
+	Room.Type.BOSS: Color("da4e38"),
+	Room.Type.SHOP: Color("4ba747"),
 }
 
 @export var fit_all := false
-@export var draw_background := true
 
 var _rooms := {} # 格子坐标 → Room
 var _links: Array = []
@@ -69,8 +68,6 @@ func is_known(cell: Vector2i) -> bool:
 
 
 func _draw() -> void:
-	if draw_background:
-		draw_rect(Rect2(Vector2.ZERO, size), COLOR_BACKGROUND)
 	if _current == null:
 		return
 	# 小地图以当前房间为中心；全图模式以所有已知房间的中心为中心，并按整数倍放大

@@ -3,11 +3,21 @@
 [ext_resource type="Script" path="res://ui/hud.gd" id="1_script"]
 [ext_resource type="Script" path="res://ui/minimap.gd" id="2_minimap"]
 [ext_resource type="Shader" path="res://common/vignette.gdshader" id="3_vignette"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_heart.png" id="4_heart"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_shield.png" id="5_shield"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_energy.png" id="6_energy"]
+[ext_resource type="Texture2D" path="res://assets/ui/coin.png" id="7_coin"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_skull.png" id="8_skull"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_skill.png" id="9_skill"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("3_vignette")
 shader_parameter/strength = 0.6
 shader_parameter/tint = Color(0.03, 0.02, 0.07, 1)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_coin"]
+atlas = ExtResource("7_coin")
+region = Rect2(0, 0, 8, 8)
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_script")
@@ -24,8 +34,9 @@ mouse_filter = 2
 [node name="Stats" type="PanelContainer" parent="."]
 offset_left = 4.0
 offset_top = 4.0
-offset_right = 110.0
-offset_bottom = 44.0
+offset_right = 104.0
+offset_bottom = 50.0
+mouse_filter = 2
 
 [node name="Rows" type="VBoxContainer" parent="Stats"]
 layout_mode = 2
@@ -33,60 +44,92 @@ theme_override_constants/separation = 2
 
 [node name="Hp" type="HBoxContainer" parent="Stats/Rows"]
 layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="HpIcon" type="TextureRect" parent="Stats/Rows/Hp"]
+custom_minimum_size = Vector2(13, 12)
+layout_mode = 2
+texture = ExtResource("4_heart")
+stretch_mode = 3
 
 [node name="HpBar" type="ProgressBar" parent="Stats/Rows/Hp"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(72, 8)
+custom_minimum_size = Vector2(56, 13)
 layout_mode = 2
 size_flags_vertical = 4
+show_percentage = false
 
 [node name="HpLabel" type="Label" parent="Stats/Rows/Hp"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
 text = "6/6"
+vertical_alignment = 1
 
 [node name="Shield" type="HBoxContainer" parent="Stats/Rows"]
 layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="ShieldIcon" type="TextureRect" parent="Stats/Rows/Shield"]
+custom_minimum_size = Vector2(13, 12)
+layout_mode = 2
+texture = ExtResource("5_shield")
+stretch_mode = 3
 
 [node name="ShieldBar" type="ProgressBar" parent="Stats/Rows/Shield"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(72, 8)
+custom_minimum_size = Vector2(56, 13)
 layout_mode = 2
 size_flags_vertical = 4
+show_percentage = false
 
 [node name="ShieldLabel" type="Label" parent="Stats/Rows/Shield"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
 text = "4/4"
+vertical_alignment = 1
 
 [node name="Energy" type="HBoxContainer" parent="Stats/Rows"]
 layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="EnergyIcon" type="TextureRect" parent="Stats/Rows/Energy"]
+custom_minimum_size = Vector2(13, 12)
+layout_mode = 2
+texture = ExtResource("6_energy")
+stretch_mode = 3
 
 [node name="EnergyBar" type="ProgressBar" parent="Stats/Rows/Energy"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(72, 8)
+custom_minimum_size = Vector2(56, 13)
 layout_mode = 2
 size_flags_vertical = 4
+show_percentage = false
 
 [node name="EnergyLabel" type="Label" parent="Stats/Rows/Energy"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 8
 text = "180/180"
+vertical_alignment = 1
 
-[node name="Minimap" type="Control" parent="."]
-unique_name_in_owner = true
-clip_contents = true
+[node name="MinimapPanel" type="PanelContainer" parent="."]
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -94.0
+offset_left = -96.0
 offset_top = 4.0
 offset_right = -4.0
-offset_bottom = 62.0
+offset_bottom = 64.0
 grow_horizontal = 0
+mouse_filter = 2
+theme_type_variation = &"MapPanel"
+
+[node name="Minimap" type="Control" parent="MinimapPanel"]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
 mouse_filter = 2
 script = ExtResource("2_minimap")
 
@@ -95,118 +138,201 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -124.0
-offset_top = 64.0
-offset_right = -6.0
+offset_top = 66.0
+offset_right = -5.0
 offset_bottom = 100.0
 grow_horizontal = 0
+mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="FloorLabel" type="Label" parent="TopRight"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 10
 text = "第 1 / 3 层"
 horizontal_alignment = 2
 
-[node name="CoinLabel" type="Label" parent="TopRight"]
+[node name="Coins" type="HBoxContainer" parent="TopRight"]
+layout_mode = 2
+theme_override_constants/separation = 3
+alignment = 2
+
+[node name="CoinIcon" type="TextureRect" parent="TopRight/Coins"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+size_flags_vertical = 4
+texture = SubResource("AtlasTexture_coin")
+stretch_mode = 3
+
+[node name="CoinLabel" type="Label" parent="TopRight/Coins"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.8, 0.46, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 10
-text = "金币 0"
+theme_override_colors/font_color = Color(0.98, 0.796, 0.243, 1)
+text = "0"
 horizontal_alignment = 2
 
-[node name="WeaponLabel" type="Label" parent="."]
+[node name="SwapLabel" type="Label" parent="."]
 unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.75)
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -164.0
-offset_top = -34.0
+offset_left = -200.0
+offset_top = -58.0
 offset_right = -6.0
-offset_bottom = -4.0
+offset_bottom = -42.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 10
-text = "手枪  能耗 0"
+text = "[Q] 切换到 手枪"
 horizontal_alignment = 2
 vertical_alignment = 2
 
-[node name="SkillPanel" type="HBoxContainer" parent="."]
-anchors_preset = 2
+[node name="WeaponPanel" type="PanelContainer" parent="."]
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = -34.0
-offset_right = 200.0
-offset_bottom = -20.0
+offset_left = -104.0
+offset_top = -40.0
+offset_right = -4.0
+offset_bottom = -4.0
+grow_horizontal = 0
 grow_vertical = 0
-theme_override_constants/separation = 4
+mouse_filter = 2
 
-[node name="SkillLabel" type="Label" parent="SkillPanel"]
+[node name="Row" type="HBoxContainer" parent="WeaponPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="WeaponIcon" type="TextureRect" parent="WeaponPanel/Row"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 0)
+layout_mode = 2
+stretch_mode = 3
+
+[node name="Text" type="VBoxContainer" parent="WeaponPanel/Row"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="WeaponLabel" type="Label" parent="WeaponPanel/Row/Text"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 10
-text = "[空格] 技能"
+text = "手枪"
 
-[node name="SkillBar" type="ProgressBar" parent="SkillPanel"]
+[node name="Cost" type="HBoxContainer" parent="WeaponPanel/Row/Text"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CostIcon" type="TextureRect" parent="WeaponPanel/Row/Text/Cost"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(40, 5)
 layout_mode = 2
 size_flags_vertical = 4
-max_value = 1.0
+texture = ExtResource("6_energy")
+stretch_mode = 3
 
-[node name="Controls" type="Label" parent="."]
-modulate = Color(1, 1, 1, 0.6)
+[node name="CostLabel" type="Label" parent="WeaponPanel/Row/Text/Cost"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.792, 0.902, 0.961, 1)
+text = "0"
+
+[node name="SkillPanel" type="PanelContainer" parent="."]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 6.0
-offset_top = -16.0
-offset_right = 300.0
+offset_left = 4.0
+offset_top = -40.0
+offset_right = 104.0
 offset_bottom = -4.0
 grow_vertical = 0
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 8
-text = "WASD 移动 · 左键 射击 · 空格 技能 · Q 换枪 · E 交互 · Tab 地图"
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="SkillPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="SkillIcon" type="TextureRect" parent="SkillPanel/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("9_skill")
+stretch_mode = 3
+
+[node name="Text" type="VBoxContainer" parent="SkillPanel/Row"]
+layout_mode = 2
+theme_override_constants/separation = 1
+
+[node name="SkillLabel" type="Label" parent="SkillPanel/Row/Text"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "[空格] 技能"
+
+[node name="SkillBar" type="ProgressBar" parent="SkillPanel/Row/Text"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(64, 7)
+layout_mode = 2
+max_value = 1.0
+show_percentage = false
+
+[node name="Controls" type="Label" parent="."]
+unique_name_in_owner = true
+modulate = Color(1, 1, 1, 0.8)
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -62.0
+offset_right = 200.0
+offset_bottom = -46.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "WASD 移动·左键 射击·空格 技能·Q 换枪·E 交互·Tab 地图"
+horizontal_alignment = 1
 vertical_alignment = 2
 
-[node name="BossPanel" type="VBoxContainer" parent="."]
+[node name="BossPanel" type="PanelContainer" parent="."]
 unique_name_in_owner = true
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -90.0
-offset_top = 6.0
-offset_right = 90.0
-offset_bottom = 30.0
+offset_left = -95.0
+offset_top = 4.0
+offset_right = 95.0
+offset_bottom = 38.0
 grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="BossPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="BossIcon" type="TextureRect" parent="BossPanel/Row"]
+layout_mode = 2
+size_flags_vertical = 4
+texture = ExtResource("8_skull")
+stretch_mode = 3
+
+[node name="Text" type="VBoxContainer" parent="BossPanel/Row"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 1
 
-[node name="BossName" type="Label" parent="BossPanel"]
+[node name="BossName" type="Label" parent="BossPanel/Row/Text"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.94, 0.49, 0.34, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 8
-text = "BOSS · 地牢恶魔"
+theme_override_colors/font_color = Color(0.863, 0.29, 0.482, 1)
+text = "地牢恶魔"
 horizontal_alignment = 1
 
-[node name="BossBar" type="ProgressBar" parent="BossPanel"]
+[node name="BossBar" type="ProgressBar" parent="BossPanel/Row/Text"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(180, 6)
+custom_minimum_size = Vector2(150, 13)
 layout_mode = 2
+show_percentage = false
 
 [node name="Message" type="Label" parent="."]
 unique_name_in_owner = true
@@ -214,14 +340,14 @@ anchors_preset = 14
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_top = -60.0
+offset_top = -64.0
 offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.8, 0.46, 1)
-theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.98, 0.796, 0.243, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 24
 text = "第 1 层"
 horizontal_alignment = 1
 vertical_alignment = 1

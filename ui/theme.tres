@@ -1,4 +1,153 @@
 [gd_resource type="Theme" format=3]
 
+[ext_resource type="FontFile" path="res://assets/fonts/ark-pixel-12px.otf" id="1_font"]
+[ext_resource type="Texture2D" path="res://assets/ui/panel.png" id="2_panel"]
+[ext_resource type="Texture2D" path="res://assets/ui/button_normal.png" id="3_btn_normal"]
+[ext_resource type="Texture2D" path="res://assets/ui/button_hover.png" id="4_btn_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/button_pressed.png" id="5_btn_pressed"]
+[ext_resource type="Texture2D" path="res://assets/ui/button_disabled.png" id="6_btn_disabled"]
+[ext_resource type="Texture2D" path="res://assets/ui/button_focus.png" id="7_btn_focus"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_bg.png" id="8_bar_bg"]
+[ext_resource type="Texture2D" path="res://assets/ui/bar_blue.png" id="9_bar_blue"]
+[ext_resource type="Texture2D" path="res://assets/ui/grabber.png" id="10_grabber"]
+[ext_resource type="Texture2D" path="res://assets/ui/grabber_highlight.png" id="11_grabber_hl"]
+
+[sub_resource type="StyleBoxTexture" id="Panel"]
+texture = ExtResource("2_panel")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="ButtonNormal"]
+texture = ExtResource("3_btn_normal")
+texture_margin_left = 2.0
+texture_margin_top = 2.0
+texture_margin_right = 2.0
+texture_margin_bottom = 3.0
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="ButtonHover"]
+texture = ExtResource("4_btn_hover")
+texture_margin_left = 2.0
+texture_margin_top = 2.0
+texture_margin_right = 2.0
+texture_margin_bottom = 3.0
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="ButtonPressed"]
+texture = ExtResource("5_btn_pressed")
+texture_margin_left = 2.0
+texture_margin_top = 3.0
+texture_margin_right = 2.0
+texture_margin_bottom = 2.0
+content_margin_left = 8.0
+content_margin_top = 3.0
+content_margin_right = 8.0
+content_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="ButtonDisabled"]
+texture = ExtResource("6_btn_disabled")
+texture_margin_left = 2.0
+texture_margin_top = 2.0
+texture_margin_right = 2.0
+texture_margin_bottom = 3.0
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="ButtonFocus"]
+texture = ExtResource("7_btn_focus")
+texture_margin_left = 2.0
+texture_margin_top = 2.0
+texture_margin_right = 2.0
+texture_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxTexture" id="BarBackground"]
+texture = ExtResource("8_bar_bg")
+texture_margin_left = 2.0
+texture_margin_top = 2.0
+texture_margin_right = 2.0
+texture_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxTexture" id="SliderFill"]
+texture = ExtResource("9_bar_blue")
+texture_margin_left = 2.0
+texture_margin_top = 3.0
+texture_margin_right = 2.0
+texture_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxTexture" id="SliderTrack"]
+texture = ExtResource("8_bar_bg")
+texture_margin_left = 2.0
+texture_margin_top = 2.0
+texture_margin_right = 2.0
+texture_margin_bottom = 2.0
+content_margin_top = 7.0
+content_margin_bottom = 0.0
+
+[sub_resource type="StyleBoxTexture" id="MapPanel"]
+texture = ExtResource("2_panel")
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+content_margin_left = 3.0
+content_margin_top = 3.0
+content_margin_right = 3.0
+content_margin_bottom = 3.0
+
 [resource]
+default_font = ExtResource("1_font")
 default_font_size = 12
+Button/colors/font_color = Color(0.992, 0.969, 0.929, 1)
+Button/colors/font_disabled_color = Color(0.467, 0.361, 0.333, 1)
+Button/colors/font_focus_color = Color(0.992, 0.969, 0.929, 1)
+Button/colors/font_hover_color = Color(0.992, 0.969, 0.929, 1)
+Button/colors/font_hover_pressed_color = Color(0.98, 0.796, 0.243, 1)
+Button/colors/font_outline_color = Color(0.133, 0.133, 0.133, 1)
+Button/colors/font_pressed_color = Color(0.98, 0.796, 0.243, 1)
+Button/colors/icon_disabled_color = Color(1, 1, 1, 0.4)
+Button/styles/disabled = SubResource("ButtonDisabled")
+Button/styles/focus = SubResource("ButtonFocus")
+Button/styles/hover = SubResource("ButtonHover")
+Button/styles/hover_pressed = SubResource("ButtonPressed")
+Button/styles/normal = SubResource("ButtonNormal")
+Button/styles/pressed = SubResource("ButtonPressed")
+HSlider/icons/grabber = ExtResource("10_grabber")
+HSlider/icons/grabber_highlight = ExtResource("11_grabber_hl")
+HSlider/styles/grabber_area = SubResource("SliderFill")
+HSlider/styles/grabber_area_highlight = SubResource("SliderFill")
+HSlider/styles/slider = SubResource("SliderTrack")
+MapPanel/base_type = &"PanelContainer"
+MapPanel/styles/panel = SubResource("MapPanel")
+Label/colors/font_color = Color(0.992, 0.969, 0.929, 1)
+Label/colors/font_outline_color = Color(0.133, 0.133, 0.133, 1)
+Label/colors/font_shadow_color = Color(0.133, 0.133, 0.133, 1)
+Label/constants/outline_size = 0
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1
+Label/constants/shadow_outline_size = 0
+Panel/styles/panel = SubResource("Panel")
+PanelContainer/styles/panel = SubResource("Panel")
+ProgressBar/styles/background = SubResource("BarBackground")
+RichTextLabel/colors/default_color = Color(0.992, 0.969, 0.929, 1)
+RichTextLabel/colors/font_outline_color = Color(0.133, 0.133, 0.133, 1)
+RichTextLabel/colors/font_shadow_color = Color(0.133, 0.133, 0.133, 1)
+RichTextLabel/constants/outline_size = 0
+RichTextLabel/constants/shadow_offset_x = 1
+RichTextLabel/constants/shadow_offset_y = 1
+RichTextLabel/constants/shadow_outline_size = 0
+TooltipLabel/colors/font_color = Color(0.992, 0.969, 0.929, 1)
+TooltipPanel/styles/panel = SubResource("Panel")

@@ -2,7 +2,7 @@
 
 一个类似《元气骑士》的 2D 俯视角 Roguelike 地牢射击游戏骨架，用 **Godot 4.7** 开发。
 
-美术使用 0x72 的免费像素素材包 [16x16 DungeonTileset II](https://0x72.itch.io/dungeontileset-ii)（CC0，可商用，详见 `assets/0x72/LICENSE.md`）。素材包里没有的枪械、子弹和特效（爆炸、刀光、冲击波、传送门、火把、伤害数字等），是照着素材包的风格重画的：同样的 `#222222` 描边、平涂底色加一道高光、只用图集里出现过的颜色，全部是逐帧像素动画。音效和背景音乐是程序生成的占位素材。玩法流程已经完整：
+美术使用 0x72 的免费像素素材包 [16x16 DungeonTileset II](https://0x72.itch.io/dungeontileset-ii)（CC0，可商用，详见 `assets/0x72/LICENSE.md`）。素材包里没有的枪械、子弹、特效（爆炸、刀光、冲击波、传送门、火把、伤害数字等）和界面（面板、按钮、血条、滑块、图标），是照着素材包的风格重画的：同样的 `#222222` 描边、平涂底色加一道高光、只用图集里出现过的颜色，全部是逐帧像素动画。界面文字用的是开源像素中文字体（Ark Pixel 12px + Cubic 11 补字，OFL，详见 `assets/fonts/LICENSE.md`）。音效和背景音乐是程序生成的占位素材。玩法流程已经完整：
 
 > 主菜单选角色 → 随机地牢（带小地图）→ 进房间锁门、分波刷怪 → 清完开门（可能掉补给箱）→ 宝箱房开金宝箱 → 商店花金币 → 打 Boss → 传送门 → 强化三选一 → 下一层 → 第 3 层 Boss 后通关 / 死亡结算 → 记录最高纪录
 
@@ -90,8 +90,10 @@ pickups/               金币、能量、药水、地上的武器
 props/                 木箱（可打碎）、宝箱（按 E 打开）、墙上的火把
 shop/                  商店商品（武器、药水、能量瓶、神秘强化）
 common/                命中粒子、挥砍刀光、爆炸、飘字、脚下阴影、受击闪白 / 暗角 shader、光照贴图、震屏相机
-ui/                    主菜单、HUD、小地图、全屏地图、Buff 三选一、暂停菜单、结算
-assets/sprites/        占位像素图（可直接替换）
+ui/                    主菜单、HUD、小地图、全屏地图、Buff 三选一、暂停菜单、结算；theme.tres 是全局界面主题
+assets/sprites/        游戏里的像素图（可直接替换）
+assets/ui/             界面九宫格贴图和图标
+assets/fonts/          像素中文字体
 assets/audio/          占位音效和背景音乐（可直接替换）
 default_bus_layout.tres 音频总线：Music、SFX
 ```
@@ -161,10 +163,11 @@ default_bus_layout.tres 音频总线：Music、SFX
 - [0x72 16x16 DungeonTileset II](https://0x72.itch.io/dungeontileset-ii)：风格和元气骑士很像
 - Kenney 的 Tiny Dungeon
 
-**中文字体**：目前用的是系统字体回退，桌面端能正常显示。导出到网页或手机前，建议下载一款开源像素中文字体（如 [Fusion Pixel](https://github.com/TakWolf/fusion-pixel-font)、[Ark Pixel](https://github.com/TakWolf/ark-pixel-font)），在 `ui/theme.tres` 里设为默认字体。
+**界面风格**：所有界面样式都在 `ui/theme.tres` 里，场景里基本不用单独设置。面板和按钮是九宫格贴图（`assets/ui/`），画法和地牢墙面一样的暖灰石头色；进度条和图标仿照图集里的 `ui_heart`：奶白外描边 + 深色内边。爱心和旋转金币直接取自图集，护盾、能量、骷髅、技能图标是照同样画法补画的。HUD 里的血条填充色在 `ui/hud.gd` 的 `BAR_TEXTURES` 里，想加新颜色的条，照着 `assets/ui/bar_red.png`（7×7，上下左右各留 2 像素透明）画一张就行。
+
+**像素字体**：`assets/fonts/ark-pixel-12px.otf`，只在 12 的整数倍字号（12、24、36）下像素对齐，所以场景里的字号都是这三档。为了让文字和美术落在同一套像素网格上，项目设置里关掉了字体过采样（`gui/fonts/dynamic_fonts/use_oversampling`），字体导入时关掉了抗锯齿和子像素定位；文字描边改成 1 像素的右下投影（`shadow_offset`），这样数字之间不会糊在一起。字体已经裁剪成 GB2312 全部字符 + 游戏里用到的字，将来加了生僻字显示成方块的话，需要重新生成字体（或临时依赖系统字体回退）。
 
 ## 下一步可以做
 
-- [ ] 敌人的逐帧动画（目前是代码做的挤压、颠动）
 - [ ] 局外成长：用金币解锁角色、初始武器
 - [ ] 更多角色和技能（召唤随从、时停、护盾……）

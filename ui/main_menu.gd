@@ -1,6 +1,8 @@
 extends Control
 ## 主菜单：选择角色，开始游戏。
 
+const SELECTED_TEXTURE := preload("res://assets/ui/button_selected.png")
+
 @onready var start_button: Button = %StartButton
 @onready var quit_button: Button = %QuitButton
 @onready var record_label: Label = %RecordLabel
@@ -23,6 +25,11 @@ func _ready() -> void:
 
 func _build_character_buttons() -> void:
 	var group := ButtonGroup.new()
+	# 选中的角色用金色描边的凹陷按钮
+	var selected := StyleBoxTexture.new()
+	selected.texture = SELECTED_TEXTURE
+	selected.set_texture_margin_all(3)
+	selected.set_content_margin_all(4)
 	for character in GameState.characters:
 		var button := Button.new()
 		button.toggle_mode = true
@@ -30,6 +37,8 @@ func _build_character_buttons() -> void:
 		button.icon = character.icon()
 		button.expand_icon = true
 		button.custom_minimum_size = Vector2(40, 40)
+		button.add_theme_stylebox_override("pressed", selected)
+		button.add_theme_stylebox_override("hover_pressed", selected)
 		button.tooltip_text = character.display_name
 		button.button_pressed = character == GameState.character
 		button.pressed.connect(_select.bind(character))
