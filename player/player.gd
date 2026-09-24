@@ -91,7 +91,7 @@ func _animate(delta: float) -> void:
 		_dust_timer -= delta
 		if _dust_timer <= 0.0:
 			_dust_timer = 0.22
-			HitEffect.spawn(get_parent(), global_position, Color(0.7, 0.72, 0.85, 0.45), 3, 0.3)
+			HitEffect.spawn(get_parent(), global_position, Color(0.85, 0.8, 0.75, 0.5), 2, 0.3, true)
 
 
 func _unhandled_input(event: InputEvent) -> void:

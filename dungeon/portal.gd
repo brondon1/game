@@ -5,6 +5,7 @@ extends Area2D
 signal player_entered
 
 var _used := false
+var _time := 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -16,7 +17,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	sprite.rotation += 3.0 * delta
+	_time += delta
+	sprite.frame = int(_time * 8.0) % 4 # 换帧转动，像素不会被旋转拉歪
 
 
 func _on_body_entered(body: Node2D) -> void:

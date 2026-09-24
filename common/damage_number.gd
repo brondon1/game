@@ -1,21 +1,29 @@
 class_name DamageNumber
-extends Label
-## 飘字：敌人受伤时在头顶弹出伤害数字，往上飘并淡出。
+extends Node2D
+## 飘字：敌人受伤时在头顶弹出像素数字，往上飘并淡出。数字贴图 digits.png 是 0~9 横向排列。
+
+const DIGITS := preload("res://assets/sprites/digits.png")
+const DIGIT_WIDTH := 5
+const SPACING := 4 # 相邻数字共用一列描边，看起来更紧凑
 
 
 static func spawn(parent: Node, pos: Vector2, amount: int, color := Color.WHITE) -> void:
 	var number := DamageNumber.new()
-	number.text = str(amount)
-	number.add_theme_font_size_override("font_size", 8)
-	number.add_theme_color_override("font_color", color)
-	number.add_theme_color_override("font_outline_color", Color("181425"))
-	number.add_theme_constant_override("outline_size", 3)
-	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	number.size = Vector2(30, 12)
-	number.position = pos + Vector2(-15 + randf_range(-4, 4), -24)
+	var text := str(amount)
+	var start_x := -(text.length() - 1) * SPACING / 2.0
+	for i in text.length():
+		var digit := Sprite2D.new()
+		digit.texture = DIGITS
+		digit.hframes = 10
+		digit.frame = int(text[i])
+		digit.position = Vector2(start_x + i * SPACING, 0)
+		number.add_child(digit)
+	number.modulate = color
+	number.position = pos + Vector2(randf_range(-4, 4), -22)
 	number.z_index = 20
-	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	number.material = preload("res://common/unshaded.tres")
+	for child in number.get_children():
+		child.use_parent_material = true
 	parent.add_child(number)
 
 
