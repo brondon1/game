@@ -1,0 +1,128 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/touch_controls.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_stick_base.png" id="2_base"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_stick_knob.png" id="3_knob"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_button_40.png" id="4_b40"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_button_40_pressed.png" id="5_b40p"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_button_28.png" id="6_b28"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_button_28_pressed.png" id="7_b28p"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_button_20.png" id="8_b20"]
+[ext_resource type="Texture2D" path="res://assets/ui/touch_button_20_pressed.png" id="9_b20p"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_skill.png" id="10_skill"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_swap.png" id="11_swap"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_hand.png" id="12_hand"]
+[ext_resource type="Texture2D" path="res://assets/ui/icon_pause.png" id="13_pause"]
+
+[sub_resource type="CircleShape2D" id="Circle40"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="Circle28"]
+radius = 14.0
+
+[sub_resource type="CircleShape2D" id="Circle20"]
+radius = 10.0
+
+[sub_resource type="RectangleShape2D" id="MapArea"]
+size = Vector2(92, 60)
+
+[node name="TouchControls" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="StickBase" type="Sprite2D" parent="."]
+unique_name_in_owner = true
+texture = ExtResource("2_base")
+
+[node name="StickKnob" type="Sprite2D" parent="StickBase"]
+unique_name_in_owner = true
+texture = ExtResource("3_knob")
+
+[node name="BottomRight" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="AttackButton" type="TouchScreenButton" parent="BottomRight"]
+position = Vector2(-48, -48)
+texture_normal = ExtResource("4_b40")
+texture_pressed = ExtResource("5_b40p")
+shape = SubResource("Circle40")
+action = "shoot"
+
+[node name="AttackIcon" type="Sprite2D" parent="BottomRight/AttackButton"]
+unique_name_in_owner = true
+position = Vector2(20, 20)
+
+[node name="SkillButton" type="TouchScreenButton" parent="BottomRight"]
+unique_name_in_owner = true
+position = Vector2(-86, -36)
+texture_normal = ExtResource("6_b28")
+texture_pressed = ExtResource("7_b28p")
+shape = SubResource("Circle28")
+action = "skill"
+
+[node name="Icon" type="Sprite2D" parent="BottomRight/SkillButton"]
+position = Vector2(14, 14)
+texture = ExtResource("10_skill")
+
+[node name="SwapButton" type="TouchScreenButton" parent="BottomRight"]
+unique_name_in_owner = true
+position = Vector2(-38, -74)
+texture_normal = ExtResource("8_b20")
+texture_pressed = ExtResource("9_b20p")
+shape = SubResource("Circle20")
+action = "switch_weapon"
+
+[node name="Icon" type="Sprite2D" parent="BottomRight/SwapButton"]
+position = Vector2(10, 10)
+texture = ExtResource("11_swap")
+
+[node name="InteractButton" type="TouchScreenButton" parent="BottomRight"]
+unique_name_in_owner = true
+position = Vector2(-86, -72)
+texture_normal = ExtResource("6_b28")
+texture_pressed = ExtResource("7_b28p")
+shape = SubResource("Circle28")
+action = "interact"
+
+[node name="Icon" type="Sprite2D" parent="BottomRight/InteractButton"]
+position = Vector2(14, 14)
+texture = ExtResource("12_hand")
+
+[node name="TopRight" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
+mouse_filter = 2
+
+[node name="PauseButton" type="TouchScreenButton" parent="TopRight"]
+position = Vector2(-122, 4)
+texture_normal = ExtResource("8_b20")
+texture_pressed = ExtResource("9_b20p")
+shape = SubResource("Circle20")
+action = "pause"
+
+[node name="Icon" type="Sprite2D" parent="TopRight/PauseButton"]
+position = Vector2(10, 10)
+texture = ExtResource("13_pause")
+
+[node name="MapButton" type="TouchScreenButton" parent="TopRight"]
+position = Vector2(-50, 34)
+shape = SubResource("MapArea")
+shape_centered = false
+action = "map"

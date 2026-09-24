@@ -41,6 +41,10 @@ var _time := 0.0
 @onready var skill_label: Label = %SkillLabel
 @onready var skill_bar: ProgressBar = %SkillBar
 @onready var controls: Label = %Controls
+@onready var skill_panel: Control = %SkillPanel
+@onready var weapon_panel: Control = %WeaponPanel
+@onready var stats_panel: Control = $Stats
+@onready var top_right: Control = $TopRight
 
 
 func _ready() -> void:
@@ -54,12 +58,28 @@ func _ready() -> void:
 	boss_panel.hide()
 	message.modulate.a = 0.0
 	controls.visible = GameState.current_floor == 1
+	if TouchControls.active:
+		_use_touch_layout()
 	GameState.stats_changed.connect(_refresh_stats)
 	GameState.weapons_changed.connect(_refresh_weapon)
 	Events.boss_health_changed.connect(_on_boss_health_changed)
 	Events.message.connect(show_message)
 	_refresh_stats()
 	_refresh_weapon()
+
+
+## 手机布局：左下角和右下角留给摇杆和按钮，技能面板挪到生命值下面，武器面板挪到金币下面。
+func _use_touch_layout() -> void:
+	skill_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_KEEP_SIZE, 4)
+	weapon_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_KEEP_SIZE, 4)
+	_stack_touch_panels.call_deferred() # 等面板按内容算好尺寸后再往下排
+	swap_label.hide() # 右下角有换枪按钮
+	controls.text = "左边拖动移动 · 右下按钮攻击、技能、换枪"
+
+
+func _stack_touch_panels() -> void:
+	skill_panel.position.y = stats_panel.position.y + stats_panel.size.y + 2.0
+	weapon_panel.position.y = top_right.position.y + top_right.get_combined_minimum_size().y + 2.0
 
 
 ## 进度条填充样式：九宫格贴图，左右上下各留出底框的 2 像素
@@ -120,17 +140,18 @@ func _update_skill() -> void:
 		return
 	var skill := _player.skill
 	skill_bar.value = skill.charge()
+	var key_hint := "" if TouchControls.active else "[空格] " # 手机上用右下角的技能按钮
 	var state := "grey"
 	if skill.is_active():
 		skill_label.text = "%s 中" % skill.display_name
 		skill_label.modulate = Color("72d6ce")
 		state = "cyan"
 	elif skill.is_ready():
-		skill_label.text = "[空格] %s" % skill.display_name
+		skill_label.text = key_hint + skill.display_name
 		skill_label.modulate = Color("facb3e")
 		state = "yellow"
 	else:
-		skill_label.text = "[空格] %s" % skill.display_name
+		skill_label.text = key_hint + skill.display_name
 		skill_label.modulate = Color(1, 1, 1, 0.5)
 	if state != _skill_state: # 只在状态变化时换样式，免得每帧触发重新布局
 		_skill_state = state

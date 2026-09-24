@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/coin.png" id="7_coin"]
 [ext_resource type="Texture2D" path="res://assets/ui/icon_skull.png" id="8_skull"]
 [ext_resource type="Texture2D" path="res://assets/ui/icon_skill.png" id="9_skill"]
+[ext_resource type="PackedScene" path="res://ui/touch_controls.tscn" id="10_touch"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("3_vignette")
@@ -190,6 +191,7 @@ horizontal_alignment = 2
 vertical_alignment = 2
 
 [node name="WeaponPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
@@ -240,6 +242,7 @@ theme_override_colors/font_color = Color(0.792, 0.902, 0.961, 1)
 text = "0"
 
 [node name="SkillPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -333,6 +336,9 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 13)
 layout_mode = 2
 show_percentage = false
+
+[node name="TouchControls" parent="." instance=ExtResource("10_touch")]
+unique_name_in_owner = true
 
 [node name="Message" type="Label" parent="."]
 unique_name_in_owner = true

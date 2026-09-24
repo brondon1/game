@@ -1,14 +1,17 @@
 extends CanvasLayer
-## 暂停菜单：Esc / P / 手柄 Start 打开或关闭。可以调节音乐和音效音量。
+## 暂停菜单：Esc / P / 手柄 Start / 手机右上角的暂停按钮打开或关闭。可以调节音乐和音效音量。
 
 @onready var resume_button: Button = %ResumeButton
 @onready var main_menu_button: Button = %MainMenuButton
 @onready var music_slider: HSlider = %MusicSlider
 @onready var sfx_slider: HSlider = %SfxSlider
+@onready var controls: Label = %Controls
 
 
 func _ready() -> void:
 	hide()
+	if TouchControls.active:
+		controls.text = "左边拖动移动 · 右下按钮攻击、技能、换枪\n点小地图看大地图 · 右上角按钮暂停"
 	resume_button.pressed.connect(_resume)
 	main_menu_button.pressed.connect(_to_main_menu)
 	music_slider.value = Sound.get_volume(&"Music")

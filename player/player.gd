@@ -145,6 +145,10 @@ func _update_aim() -> void:
 	if target:
 		# 从手上的枪瞄向敌人身体中心，和子弹实际飞的路线一致
 		aim_direction = weapon_pivot.global_position.direction_to(target.global_position + Vector2(0, -4))
+	elif TouchControls.active:
+		# 手机上没有鼠标：没有目标时枪口朝着移动的方向
+		if velocity.length() > 1.0:
+			aim_direction = velocity.normalized()
 	else:
 		var to_mouse := get_global_mouse_position() - global_position
 		if to_mouse.length() > 4.0:
@@ -215,10 +219,15 @@ func remove_interactable(node: Node2D) -> void:
 	_nearby_interactables.erase(node)
 
 
-func _interact() -> void:
+## 附近有没有能交互的东西（手机上的交互按钮只在这时显示）。
+func can_interact() -> bool:
 	_nearby_interactables = _nearby_interactables.filter(
 		func(n: Object) -> bool: return is_instance_valid(n) and not n.is_queued_for_deletion())
-	if _nearby_interactables.is_empty():
+	return not _nearby_interactables.is_empty()
+
+
+func _interact() -> void:
+	if not can_interact():
 		return
 	var closest: Node2D = _nearby_interactables[0]
 	for n: Node2D in _nearby_interactables:

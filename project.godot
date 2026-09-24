@@ -30,6 +30,8 @@ window/size/window_width_override=1440
 window/size/window_height_override=810
 window/stretch/mode="canvas_items"
 window/stretch/scale_mode="integer"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
 
 [gui]
 
