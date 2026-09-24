@@ -1,11 +1,12 @@
 extends CanvasLayer
-## 暂停菜单：Esc / P / 手柄 Start / 手机右上角的暂停按钮打开或关闭。可以调节音乐和音效音量。
+## 暂停菜单：Esc / P / 手柄 Start / 手机右上角的暂停按钮打开或关闭。可以调节音乐和音效音量、开关自动射击。
 
 @onready var resume_button: Button = %ResumeButton
 @onready var main_menu_button: Button = %MainMenuButton
 @onready var music_slider: HSlider = %MusicSlider
 @onready var sfx_slider: HSlider = %SfxSlider
 @onready var controls: Label = %Controls
+@onready var auto_fire_button: Button = %AutoFireButton
 
 
 func _ready() -> void:
@@ -16,6 +17,11 @@ func _ready() -> void:
 	main_menu_button.pressed.connect(_to_main_menu)
 	music_slider.value = Sound.get_volume(&"Music")
 	sfx_slider.value = Sound.get_volume(&"SFX")
+	auto_fire_button.button_pressed = GameState.auto_fire
+	_refresh_auto_fire()
+	auto_fire_button.toggled.connect(func(on: bool) -> void:
+		GameState.auto_fire = on
+		_refresh_auto_fire())
 	music_slider.value_changed.connect(func(v: float) -> void: Sound.set_volume(&"Music", v))
 	sfx_slider.value_changed.connect(func(v: float) -> void:
 		Sound.set_volume(&"SFX", v)
@@ -32,6 +38,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().paused = true
 		resume_button.grab_focus()
 	get_viewport().set_input_as_handled()
+
+
+## 自动射击：门关上（在打怪）时，瞄准到打得到的敌人就自动开火
+func _refresh_auto_fire() -> void:
+	auto_fire_button.text = "自动射击：%s" % ("开" if GameState.auto_fire else "关")
 
 
 func _resume() -> void:

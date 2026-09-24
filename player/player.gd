@@ -19,6 +19,7 @@ var _invincible := 0.0
 var _since_hit := 0.0
 var _regen_timer := 0.0
 var _nearby_interactables: Array = []
+var _aim_target: Enemy
 var _dead := false
 var _offhand_on := false
 var _dash_velocity := Vector2.ZERO
@@ -65,7 +66,7 @@ func _physics_process(delta: float) -> void:
 
 	_update_aim()
 	_animate(delta)
-	if Input.is_action_pressed("shoot"):
+	if Input.is_action_pressed("shoot") or _wants_auto_fire():
 		shoot()
 	_update_timers(delta)
 
@@ -142,6 +143,7 @@ func take_damage(amount: int, _direction := Vector2.ZERO) -> void:
 
 func _update_aim() -> void:
 	var target: Enemy = find_aim_target() if auto_aim else null
+	_aim_target = target
 	if target:
 		# 从手上的枪瞄向敌人身体中心，和子弹实际飞的路线一致
 		aim_direction = weapon_pivot.global_position.direction_to(target.global_position + Vector2(0, -4))
@@ -158,6 +160,16 @@ func _update_aim() -> void:
 	var facing_left := aim_direction.x < 0.0
 	sprite.flip_h = facing_left
 	weapon_pivot.scale.y = -1.0 if facing_left else 1.0
+
+
+## 自动射击：门关着（在打怪）时，只要瞄着的敌人子弹打得到就自动开火；
+## 近战武器等敌人进了攻击范围再挥。在暂停菜单里可以关掉。
+func _wants_auto_fire() -> bool:
+	if not GameState.auto_fire or not GameState.in_combat or not is_instance_valid(_aim_target):
+		return false
+	if weapon.data and weapon.data.is_melee:
+		return global_position.distance_to(_aim_target.global_position) <= weapon.data.melee_range + 8.0
+	return has_clear_shot(_aim_target.global_position + Vector2(0, -4))
 
 
 ## 瞄准范围内最近的敌人（自动瞄准和刺客技能都用它）。

@@ -1,6 +1,6 @@
 extends Node
 ## 音效和背景音乐管理器。任何地方调用 Sound.play(Sound.XXX) 播放音效，Sound.play_music() 切换背景音乐。
-## 音量设置（音乐 / 音效两条总线）保存在 user://settings.cfg。
+## 音量设置（音乐 / 音效两条总线）和自动射击开关保存在 user://settings.cfg。
 
 const SHOOT := preload("res://assets/audio/shoot.wav")
 const HIT := preload("res://assets/audio/hit.wav")
@@ -103,6 +103,7 @@ func save_settings() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("audio", "music", get_volume(&"Music"))
 	cfg.set_value("audio", "sfx", get_volume(&"SFX"))
+	cfg.set_value("game", "auto_fire", GameState.auto_fire)
 	cfg.save(SETTINGS_PATH)
 
 
@@ -111,6 +112,7 @@ func _load_settings() -> void:
 	cfg.load(SETTINGS_PATH)
 	set_volume(&"Music", cfg.get_value("audio", "music", 0.6))
 	set_volume(&"SFX", cfg.get_value("audio", "sfx", 0.8))
+	GameState.auto_fire = cfg.get_value("game", "auto_fire", true)
 
 
 func _on_node_added(node: Node) -> void:

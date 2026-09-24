@@ -69,6 +69,12 @@ size_flags_vertical = 4
 max_value = 1.0
 step = 0.05
 
+[node name="AutoFireButton" type="Button" parent="Center/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+toggle_mode = true
+text = "自动射击：开"
+
 [node name="ResumeButton" type="Button" parent="Center/Panel/VBox"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 0)

@@ -94,6 +94,7 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 	if _state != State.IDLE or not body is Player:
 		return
 	_state = State.FIGHTING
+	GameState.in_combat = true
 	if type == Type.BOSS:
 		_waves_left = 1
 	else:
@@ -176,6 +177,7 @@ func _on_enemy_died(_enemy: Enemy) -> void:
 
 func _clear() -> void:
 	_state = State.CLEARED
+	GameState.in_combat = false
 	for door in doors:
 		door.set_closed(false)
 	Sound.play(Sound.DOOR, -4.0)

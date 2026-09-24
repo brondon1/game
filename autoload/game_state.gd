@@ -69,6 +69,11 @@ var weapon_index := 0
 var best_floor := 0
 var wins := 0
 
+## 设置：门关上（在打怪）时自动开火（保存在 settings.cfg，由 Sound 读写）
+var auto_fire := true
+## 当前是否在锁门的战斗房里（房间锁门时设为 true，清空后设为 false）
+var in_combat := false
+
 
 func _ready() -> void:
 	for path in CHARACTER_PATHS:
@@ -80,6 +85,7 @@ func _ready() -> void:
 
 func new_run() -> void:
 	current_floor = 1
+	in_combat = false
 	coins = 0
 	kills = 0
 	max_hp = character.max_hp

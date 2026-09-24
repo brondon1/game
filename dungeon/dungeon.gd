@@ -106,6 +106,7 @@ const AGENT_RADIUS := 10.0
 
 
 func _ready() -> void:
+	GameState.in_combat = false
 	Events.room_cleared.connect(_on_room_cleared)
 	Events.player_died.connect(_on_player_died)
 	buff_select.buff_chosen.connect(_on_buff_chosen)
