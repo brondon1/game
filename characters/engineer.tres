@@ -7,7 +7,7 @@
 
 [resource]
 script = ExtResource("1_script")
-display_name = "工程师"
+display_name = "女巫"
 texture = ExtResource("2_tex")
 max_hp = 6
 max_shield = 5

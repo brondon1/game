@@ -140,4 +140,6 @@ func _refresh() -> void:
 		_swing_tween.kill()
 	rotation = 0.0
 	sprite.texture = data.texture if data else null
+	if data:
+		sprite.offset = Vector2(-2, -data.texture.get_height() / 2.0) # 握把在贴图左侧中间
 	muzzle.position = data.muzzle_offset if data else Vector2.ZERO

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b4m8jvjpa0bgy"
-path="res://.godot/imported/decor_grass.png-bcd5cf6ae07a9338e3f3da52829b7a09.ctex"
+uid="uid://clk8xxo7vh1q"
+path="res://.godot/imported/door_v.png-3bca63e312fe89fb8c20942df3ef9143.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/decor_grass.png"
-dest_files=["res://.godot/imported/decor_grass.png-bcd5cf6ae07a9338e3f3da52829b7a09.ctex"]
+source_file="res://assets/sprites/door_v.png"
+dest_files=["res://.godot/imported/door_v.png-3bca63e312fe89fb8c20942df3ef9143.ctex"]
 
 [params]
 

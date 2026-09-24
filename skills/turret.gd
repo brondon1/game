@@ -1,6 +1,6 @@
 class_name Turret
 extends Node2D
-## 工程师的炮台：自动瞄准视线内最近的敌人开火，时间到了闪烁后消失。
+## 女巫召唤的奥术炮塔：自动瞄准视线内最近的敌人开火，时间到了闪烁后消失。
 
 const BULLET_SCENE := preload("res://weapons/bullet.tscn")
 
@@ -16,6 +16,7 @@ var _fire_timer := 0.0
 
 func _ready() -> void:
 	BlobShadow.add_to(self, 1.1)
+	sprite.self_modulate = Color(1.0, 0.75, 1.35) # 染成紫色，配合女巫的奥术主题
 	sprite.scale = Vector2(0.2, 0.2)
 	create_tween().tween_property(sprite, "scale", Vector2.ONE, 0.25).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 

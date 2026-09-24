@@ -29,7 +29,7 @@ shadow_scale = 0.7
 material = SubResource("ShaderMaterial_flash")
 position = Vector2(0, -12)
 texture = ExtResource("2_tex")
-hframes = 2
+hframes = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -3)

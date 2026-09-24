@@ -1,5 +1,5 @@
 extends Skill
-## 工程师技能【部署炮台】：在脚下放一座会自动射击的炮台，持续一段时间。
+## 女巫技能【奥术炮塔】：在脚下召唤一座会自动射击的炮塔，持续一段时间。
 
 const TURRET_SCENE := preload("res://skills/turret.tscn")
 

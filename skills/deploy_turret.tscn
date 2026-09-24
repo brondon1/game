@@ -6,6 +6,6 @@
 [node name="DeployTurret" type="Node"]
 script = ExtResource("1_script")
 sound = ExtResource("2_sound")
-display_name = "部署炮台"
-description = "放下一座自动射击的炮台，持续 8 秒"
+display_name = "奥术炮塔"
+description = "召唤一座自动射击的奥术炮塔，持续 8 秒"
 cooldown = 12.0

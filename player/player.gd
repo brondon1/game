@@ -39,7 +39,9 @@ func _ready() -> void:
 	add_to_group("player")
 	var character := GameState.character
 	sprite.texture = character.texture
-	sprite.hframes = character.frame_count()
+	sprite.hframes = character.hframes
+	# 让脚踩在节点原点上：不同角色的贴图高度不一样
+	sprite.position.y = -character.texture.get_height() / 2.0 + 1.0
 	_sprite_base_y = sprite.position.y
 	BlobShadow.add_to(self)
 	base_speed = character.speed
@@ -68,7 +70,7 @@ func _physics_process(delta: float) -> void:
 	_update_timers(delta)
 
 
-## 逐帧动画：站着时播放 2 帧呼吸，走路时播放 4 帧迈腿，并扬起一点灰尘。
+## 逐帧动画：站着时播放 4 帧待机，跑动时播放 4 帧跑步，并扬起一点灰尘。
 ## 只有一帧的贴图（比如自己换的素材）退回到代码颠动。
 func _animate(delta: float) -> void:
 	if _dash_time > 0.0:
@@ -79,7 +81,7 @@ func _animate(delta: float) -> void:
 		if moving:
 			sprite.frame = CharacterData.IDLE_FRAMES + int(_anim_time * 10.0) % CharacterData.WALK_FRAMES
 		else:
-			sprite.frame = int(_anim_time * 2.0) % CharacterData.IDLE_FRAMES
+			sprite.frame = int(_anim_time * 6.0) % CharacterData.IDLE_FRAMES
 	elif moving:
 		sprite.position.y = _sprite_base_y - absf(sin(_anim_time * 14.0)) * 1.5
 	else:

@@ -27,6 +27,7 @@ death_color = Color(0.39, 0.78, 0.3, 1)
 material = SubResource("ShaderMaterial_flash")
 position = Vector2(0, -6)
 texture = ExtResource("2_tex")
+hframes = 8
 
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

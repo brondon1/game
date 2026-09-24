@@ -39,6 +39,7 @@ var _dead := false
 var _nav: NavigationAgent2D
 var _repath_timer := 0.0
 var _walk_time := 0.0
+var _anim_time := 0.0
 var _slow_time := 0.0
 var _sprite_base_y := 0.0
 var _sprite_base_scale := Vector2.ONE
@@ -51,6 +52,9 @@ func _ready() -> void:
 	max_hp = roundi(max_hp * hp_multiplier)
 	hp = max_hp
 	player = get_tree().get_first_node_in_group("player") as Player
+	if sprite.hframes > 1:
+		# 动画条：让脚踩在节点原点上
+		sprite.position.y = -sprite.texture.get_height() / 2.0 * sprite.scale.y + 1.0
 	_sprite_base_y = sprite.position.y
 	_sprite_base_scale = sprite.scale
 	BlobShadow.add_to(self, shadow_scale)
@@ -95,8 +99,14 @@ func _physics_process(delta: float) -> void:
 	_try_contact_damage()
 
 
-## 移动时一颠一颠、挤压拉伸，看起来更有弹性。
+## 有 8 帧动画条（4 帧待机 + 4 帧跑动）时逐帧播放；只有一张图时用挤压拉伸代替。
 func _animate(delta: float, move_dir: Vector2) -> void:
+	_anim_time += delta
+	if sprite.hframes >= 8:
+		var moving := move_dir.length() > 0.1
+		sprite.frame = (4 if moving else 0) + int(_anim_time * (10.0 if moving else 7.0)) % 4
+		sprite.scale = _sprite_base_scale
+		return
 	if move_dir.length() > 0.1:
 		_walk_time += delta * 12.0
 		var s := sin(_walk_time)

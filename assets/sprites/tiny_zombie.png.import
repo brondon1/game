@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b0iepv4wkxs7w"
-path="res://.godot/imported/decor_rubble.png-85106b8b7b6b5a913420ed3f7442debb.ctex"
+uid="uid://0u2r8475xvmg"
+path="res://.godot/imported/tiny_zombie.png-d191d1ff0a14f6d222be2828cf765e1e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/decor_rubble.png"
-dest_files=["res://.godot/imported/decor_rubble.png-85106b8b7b6b5a913420ed3f7442debb.ctex"]
+source_file="res://assets/sprites/tiny_zombie.png"
+dest_files=["res://.godot/imported/tiny_zombie.png-d191d1ff0a14f6d222be2828cf765e1e.ctex"]
 
 [params]
 
