@@ -143,7 +143,8 @@ func take_damage(amount: int, _direction := Vector2.ZERO) -> void:
 func _update_aim() -> void:
 	var target: Enemy = find_aim_target() if auto_aim else null
 	if target:
-		aim_direction = global_position.direction_to(target.global_position)
+		# 从手上的枪瞄向敌人身体中心，和子弹实际飞的路线一致
+		aim_direction = weapon_pivot.global_position.direction_to(target.global_position + Vector2(0, -4))
 	else:
 		var to_mouse := get_global_mouse_position() - global_position
 		if to_mouse.length() > 4.0:
@@ -155,25 +156,50 @@ func _update_aim() -> void:
 	weapon_pivot.scale.y = -1.0 if facing_left else 1.0
 
 
-## 视线内、瞄准范围内最近的敌人（自动瞄准和刺客技能都用它）。
+## 瞄准范围内最近的敌人（自动瞄准和刺客技能都用它）。
+## 优先选子弹真的打得到的；都打不到时退而选看得见的（比如只露出一角），被墙完全挡住的不瞄。
 func find_aim_target() -> Enemy:
-	var best: Enemy = null
-	var best_dist := aim_range
-	var space := get_world_2d().direct_space_state
+	var best_clear: Enemy = null
+	var best_clear_dist := aim_range
+	var best_visible: Enemy = null
+	var best_visible_dist := aim_range
 	for node in get_tree().get_nodes_in_group("enemies"):
 		var enemy := node as Enemy
 		if enemy == null or not enemy.is_targetable():
 			continue
 		var dist := global_position.distance_to(enemy.global_position)
-		if dist >= best_dist:
+		if dist >= best_visible_dist and dist >= best_clear_dist:
 			continue
-		# 被墙挡住的敌人不瞄准（只检测第 1 层：墙和门）
-		var query := PhysicsRayQueryParameters2D.create(global_position, enemy.global_position, Bullet.LAYER_WORLD)
-		if not space.intersect_ray(query).is_empty():
-			continue
-		best = enemy
-		best_dist = dist
-	return best
+		var point := enemy.global_position + Vector2(0, -4) # 敌人身体中心
+		if dist < best_clear_dist and has_clear_shot(point):
+			best_clear = enemy
+			best_clear_dist = dist
+		elif dist < best_visible_dist and _is_visible(weapon_pivot.global_position, point):
+			best_visible = enemy
+			best_visible_dist = dist
+	return best_clear if best_clear else best_visible
+
+
+## 子弹从枪口飞到 point 的这一路有没有墙：按枪口的实际位置（偏离手的中心线几个像素）
+## 和子弹的粗细，检查弹道中线和两侧边缘三条线。只看中心线的话，子弹会一直蹭在石柱角上。
+func has_clear_shot(point: Vector2) -> bool:
+	var hand := weapon_pivot.global_position
+	var dir := hand.direction_to(point)
+	var side := Vector2(-dir.y, dir.x) # 武器本地坐标的 +y 方向
+	var muzzle_y := weapon.position.y + weapon.muzzle.position.y
+	if dir.x < 0.0:
+		muzzle_y = -muzzle_y # 朝左时枪上下翻转（见 _update_aim）
+	for edge in [-Bullet.RADIUS, 0.0, Bullet.RADIUS]:
+		var offset: Vector2 = side * (muzzle_y + edge)
+		if not _is_visible(hand + offset, point + offset):
+			return false
+	return true
+
+
+func _is_visible(from: Vector2, to: Vector2) -> bool:
+	# 只检测第 1 层：墙、门和障碍物
+	var query := PhysicsRayQueryParameters2D.create(from, to, Bullet.LAYER_WORLD)
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
 
 
 # ---------- 交互（按 E） ----------

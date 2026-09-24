@@ -51,6 +51,7 @@ func fire(team: Bullet.Team, damage_mult := 1.0, fire_rate_mult := 1.0) -> void:
 		get_tree().current_scene.add_child(bullet)
 		bullet.setup(team, muzzle.global_position, global_rotation + offset,
 				data.bullet_speed * randf_range(0.95, 1.05), damage, data.bullet_range, data.piercing)
+		bullet.start_from(global_position)
 		bullet.apply_effects(data)
 	_muzzle_flash()
 	# 后坐力小动画

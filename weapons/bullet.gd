@@ -8,6 +8,8 @@ enum Team { PLAYER, ENEMY }
 const PLAYER_TEXTURE := preload("res://assets/sprites/bullet_player.png")
 const ENEMY_TEXTURE := preload("res://assets/sprites/bullet_enemy.png")
 const HOMING_RANGE := 160.0
+## 碰撞圆的半径（和 bullet.tscn 里的 CollisionShape2D 一致）
+const RADIUS := 3.0
 
 # 碰撞层（与 项目设置 → Layer Names → 2D Physics 对应）
 const LAYER_WORLD := 1
@@ -54,6 +56,19 @@ func setup(p_team: Team, pos: Vector2, angle: float, speed: float, p_damage: int
 	collision_mask = LAYER_WORLD | (LAYER_ENEMY if is_player else LAYER_PLAYER)
 	sprite.texture = PLAYER_TEXTURE if is_player else ENEMY_TEXTURE
 	add_to_group("player_bullets" if is_player else "enemy_bullets") # 近战武器靠这个分组找到要打掉的子弹
+
+
+## 贴脸开火：枪管（握把 → 枪口）这一段如果已经碰到敌人或伸进了墙里，子弹就从碰到的地方出发。
+## 否则贴在身上的敌人永远打不到（枪口已经伸到它身后），枪管戳过薄墙时子弹还会从墙后面飞出去。
+func start_from(grip: Vector2) -> void:
+	var query := PhysicsRayQueryParameters2D.create(grip, global_position, collision_mask)
+	query.hit_from_inside = true # 敌人和玩家重叠时，握把就在敌人身体里
+	var hit := get_world_2d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return
+	if hit.normal == Vector2.ZERO and not hit.collider.has_method("take_damage"):
+		return # 贴着墙站时握把会稍微压进墙的碰撞里，这不算枪管碰墙
+	global_position = hit.position
 
 
 ## 按武器数据开启子弹特效和贴图。

@@ -2,7 +2,7 @@ class_name Enemy
 extends CharacterBody2D
 ## 敌人基类：出生预警 → 追击玩家、碰到造成接触伤害；受击闪白和击退，死亡掉落金币和能量。
 ## 子类重写 _think() 实现不同的 AI（返回想要移动的方向）。
-## 追击用 chase_direction()：能直接看到玩家就直线走，被石柱挡住时沿导航网格绕路。
+## 追击用 chase_direction()：能直接走到玩家身边就直线走，被石柱挡住时沿导航网格绕路。
 
 signal died(enemy: Enemy)
 ## 召唤 / 分裂出新的敌人时发出，房间靠它把新敌人也算进这一波
@@ -45,6 +45,7 @@ var _sprite_base_y := 0.0
 var _sprite_base_scale := Vector2.ONE
 
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var body_shape: CollisionShape2D = $CollisionShape2D
 
 
 func _ready() -> void:
@@ -122,10 +123,10 @@ func _think(_delta: float) -> Vector2:
 	return chase_direction()
 
 
-## 朝玩家移动的方向：能直接看到玩家就直线走，被障碍物挡住时沿导航网格绕路。
+## 朝玩家移动的方向：路上没有障碍物就直线走，被挡住时沿导航网格绕路。
 func chase_direction() -> Vector2:
 	var direct := global_position.direction_to(player.global_position)
-	if has_line_of_sight_to_player():
+	if _can_walk_straight_to_player():
 		return direct
 	_repath_timer -= get_physics_process_delta_time()
 	if _repath_timer <= 0.0:
@@ -177,6 +178,20 @@ func shoot_bullet(angle: float, bullet_speed: float, damage := 1) -> void:
 func has_line_of_sight_to_player() -> bool:
 	var query := PhysicsRayQueryParameters2D.create(global_position, player.global_position, Bullet.LAYER_WORLD)
 	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## 能不能直接朝玩家走过去：按身体的宽度检查中线和两侧边缘三条线。
+## 只看脚下一条细线的话，线能从石柱角旁边擦过去，身体却会顶在角上一直走不过来。
+func _can_walk_straight_to_player() -> bool:
+	var from := body_shape.global_position
+	var to := player.global_position + body_shape.position
+	var side := from.direction_to(to).orthogonal() * body_shape.shape.get_rect().size.x * 0.5
+	var space := get_world_2d().direct_space_state
+	for offset: Vector2 in [Vector2.ZERO, side, -side]:
+		var query := PhysicsRayQueryParameters2D.create(from + offset, to + offset, Bullet.LAYER_WORLD)
+		if not space.intersect_ray(query).is_empty():
+			return false
+	return true
 
 
 func _try_contact_damage() -> void:
