@@ -2,6 +2,7 @@ class_name Minimap
 extends Control
 ## 小地图：显示去过的房间，以及和它们相连、还没去过的房间（暗色）。
 ## 以玩家所在的房间为中心，地图大了也能显示。
+## 勾选 fit_all 后变成全图模式（全屏大地图用）：把所有已知房间缩放到铺满整个控件。
 
 ## 每个房间方块的大小，以及相邻房间中心之间的距离
 const ROOM_SIZE := Vector2(10, 7)
@@ -17,7 +18,11 @@ const COLOR_PLAYER := Color("73eff7")
 const ICON_COLORS := {
 	Room.Type.CHEST: Color("ffcd75"),
 	Room.Type.BOSS: Color("b13e53"),
+	Room.Type.SHOP: Color("38b764"),
 }
+
+@export var fit_all := false
+@export var draw_background := true
 
 var _rooms := {} # 格子坐标 → Room
 var _links: Array = []
@@ -38,6 +43,8 @@ func setup(rooms: Dictionary, links: Array) -> void:
 
 
 func _process(_delta: float) -> void:
+	if not is_visible_in_tree():
+		return
 	if _player == null:
 		_player = get_tree().get_first_node_in_group("player") as Node2D
 		if _player == null:
@@ -62,10 +69,23 @@ func is_known(cell: Vector2i) -> bool:
 
 
 func _draw() -> void:
-	draw_rect(Rect2(Vector2.ZERO, size), COLOR_BACKGROUND)
+	if draw_background:
+		draw_rect(Rect2(Vector2.ZERO, size), COLOR_BACKGROUND)
 	if _current == null:
 		return
-	var origin := size / 2.0 - Vector2(_current.cell) * SPACING
+	# 小地图以当前房间为中心；全图模式以所有已知房间的中心为中心，并按整数倍放大
+	var focus := Vector2(_current.cell)
+	var zoom := 1.0
+	if fit_all:
+		var bounds := Rect2(focus, Vector2.ZERO)
+		for cell: Vector2i in _rooms:
+			if is_known(cell):
+				bounds = bounds.expand(Vector2(cell))
+		focus = bounds.get_center()
+		var needed := bounds.size * SPACING + ROOM_SIZE * 2.0
+		zoom = clampf(floorf(minf(size.x / needed.x, size.y / needed.y)), 1.0, 4.0)
+	draw_set_transform(size / 2.0, 0.0, Vector2.ONE * zoom)
+	var origin := -focus * SPACING
 
 	# 走廊：至少有一头去过才画
 	for link: Array in _links:

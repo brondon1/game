@@ -17,6 +17,8 @@ const DOOR := preload("res://assets/audio/door.wav")
 const PORTAL := preload("res://assets/audio/portal.wav")
 const BUFF := preload("res://assets/audio/buff.wav")
 const CLICK := preload("res://assets/audio/click.wav")
+const BUY := preload("res://assets/audio/buy.wav")
+const DENIED := preload("res://assets/audio/denied.wav")
 const VICTORY := preload("res://assets/audio/victory.wav")
 const GAME_OVER := preload("res://assets/audio/game_over.wav")
 

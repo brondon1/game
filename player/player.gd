@@ -18,7 +18,7 @@ var skill: Skill
 var _invincible := 0.0
 var _since_hit := 0.0
 var _regen_timer := 0.0
-var _nearby_pickups: Array = []
+var _nearby_interactables: Array = []
 var _dead := false
 var _offhand_on := false
 var _dash_velocity := Vector2.ZERO
@@ -142,32 +142,29 @@ func _find_auto_aim_target() -> Enemy:
 	return best
 
 
-# ---------- 武器拾取 ----------
+# ---------- 交互（按 E） ----------
+# 可交互物体（地上的武器、商店商品……）是带 interact(player) 方法的 Area2D，
+# 玩家靠近时它们调用 add_interactable()，离开时调用 remove_interactable()。
 
-func add_nearby_pickup(pickup: WeaponPickup) -> void:
-	if not _nearby_pickups.has(pickup):
-		_nearby_pickups.append(pickup)
+func add_interactable(node: Node2D) -> void:
+	if not _nearby_interactables.has(node):
+		_nearby_interactables.append(node)
 
 
-func remove_nearby_pickup(pickup: WeaponPickup) -> void:
-	_nearby_pickups.erase(pickup)
+func remove_interactable(node: Node2D) -> void:
+	_nearby_interactables.erase(node)
 
 
 func _interact() -> void:
-	_nearby_pickups = _nearby_pickups.filter(is_instance_valid)
-	if _nearby_pickups.is_empty():
+	_nearby_interactables = _nearby_interactables.filter(
+		func(n: Object) -> bool: return is_instance_valid(n) and not n.is_queued_for_deletion())
+	if _nearby_interactables.is_empty():
 		return
-	var closest: WeaponPickup = _nearby_pickups[0]
-	for p: WeaponPickup in _nearby_pickups:
-		if global_position.distance_to(p.global_position) < global_position.distance_to(closest.global_position):
-			closest = p
-	Sound.play(Sound.PICKUP_WEAPON, 0.0, 0.0)
-	var dropped := GameState.pick_up_weapon(closest.data)
-	if dropped:
-		closest.data = dropped # 背包满了：把换下来的武器留在原地
-	else:
-		_nearby_pickups.erase(closest)
-		closest.queue_free()
+	var closest: Node2D = _nearby_interactables[0]
+	for n: Node2D in _nearby_interactables:
+		if global_position.distance_to(n.global_position) < global_position.distance_to(closest.global_position):
+			closest = n
+	closest.interact(self)
 
 
 func _on_weapons_changed() -> void:

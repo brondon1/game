@@ -144,6 +144,15 @@ func add_coins(amount: int) -> void:
 	stats_changed.emit()
 
 
+## 花金币，不够就返回 false。
+func spend_coins(amount: int) -> bool:
+	if coins < amount:
+		return false
+	coins -= amount
+	stats_changed.emit()
+	return true
+
+
 # ---------- 武器 ----------
 
 func current_weapon() -> WeaponData:

@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://ui/pause_menu.tscn" id="5_pause"]
 [ext_resource type="PackedScene" path="res://ui/buff_select.tscn" id="6_buff"]
 [ext_resource type="PackedScene" path="res://ui/game_over.tscn" id="7_game_over"]
+[ext_resource type="PackedScene" path="res://ui/map_overlay.tscn" id="8_map"]
 
 [node name="Dungeon" type="Node2D"]
 script = ExtResource("1_script")
@@ -28,3 +29,5 @@ y_sort_enabled = true
 [node name="BuffSelect" parent="." instance=ExtResource("6_buff")]
 
 [node name="GameOver" parent="." instance=ExtResource("7_game_over")]
+
+[node name="MapOverlay" parent="." instance=ExtResource("8_map")]

@@ -18,6 +18,7 @@ const PORTAL_SCENE := preload("res://dungeon/portal.tscn")
 @onready var hud: HUD = $HUD
 @onready var buff_select: BuffSelect = $BuffSelect
 @onready var game_over: GameOver = $GameOver
+@onready var map_overlay: MapOverlay = $MapOverlay
 
 
 func _ready() -> void:
@@ -81,12 +82,15 @@ func _build(layout: Dictionary) -> void:
 			player.global_position = room.rect.get_center()
 			player.get_node("Camera2D").reset_smoothing()
 	hud.minimap.setup(room_by_cell, links)
+	map_overlay.setup(room_by_cell, links)
 
 
 func _room_size(type: Room.Type) -> Vector2i:
 	match type:
 		Room.Type.BOSS:
 			return Vector2i(19, 15)
+		Room.Type.SHOP:
+			return Vector2i(11, 9)
 		Room.Type.BATTLE:
 			return BATTLE_ROOM_SIZES.pick_random()
 	return Vector2i(9, 9)

@@ -1,8 +1,9 @@
 class_name Room
 extends Node2D
 ## 地牢里的一个房间。战斗房和 Boss 房：玩家走进来后关门、分波刷怪，全部清完后开门。
+## 宝箱房放一把武器和药水，商店房放商人和商品。
 
-enum Type { START, BATTLE, CHEST, BOSS }
+enum Type { START, BATTLE, CHEST, BOSS, SHOP }
 enum State { IDLE, FIGHTING, CLEARED }
 
 const SLIME_SCENE := preload("res://enemies/slime.tscn")
@@ -10,6 +11,8 @@ const GUNNER_SCENE := preload("res://enemies/gunner.tscn")
 const BOSS_SCENE := preload("res://enemies/boss.tscn")
 const PICKUP_SCENE := preload("res://pickups/pickup.tscn")
 const WEAPON_PICKUP_SCENE := preload("res://pickups/weapon_pickup.tscn")
+const SHOP_ITEM_SCENE := preload("res://shop/shop_item.tscn")
+const MERCHANT_TEXTURE := preload("res://assets/sprites/merchant.png")
 
 ## 玩家要走进房间多深（像素）才触发关门，保证不会被门卡住
 const TRIGGER_INSET := 24.0
@@ -42,6 +45,9 @@ func _ready() -> void:
 		Type.CHEST:
 			_state = State.CLEARED
 			_spawn_chest_loot()
+		Type.SHOP:
+			_state = State.CLEARED
+			_spawn_shop()
 		_:
 			_state = State.CLEARED
 
@@ -147,3 +153,29 @@ func _spawn_chest_loot() -> void:
 	potion.amount = 2
 	potion.position = rect.get_center() + Vector2(20, 0)
 	_entities.add_child(potion)
+
+
+func _spawn_shop() -> void:
+	var center := rect.get_center()
+	var merchant := Sprite2D.new()
+	merchant.texture = MERCHANT_TEXTURE
+	merchant.position = center + Vector2(0, -30)
+	merchant.offset = Vector2(0, -6)
+	_entities.add_child(merchant)
+
+	# 商品：一把随机武器、药水、能量、神秘强化。价格随楼层上涨一点。
+	var floor_bonus := (GameState.current_floor - 1) * 2
+	var goods := [
+		[ShopItem.Kind.WEAPON, 18 + floor_bonus],
+		[ShopItem.Kind.POTION, 10 + floor_bonus],
+		[ShopItem.Kind.ENERGY, 6 + floor_bonus],
+		[ShopItem.Kind.BUFF, 30 + floor_bonus * 2],
+	]
+	for i in goods.size():
+		var item: ShopItem = SHOP_ITEM_SCENE.instantiate()
+		item.kind = goods[i][0]
+		item.price = goods[i][1]
+		if item.kind == ShopItem.Kind.WEAPON:
+			item.weapon = GameState.random_new_weapon()
+		item.position = center + Vector2(-54 + i * 36, 10)
+		_entities.add_child(item)

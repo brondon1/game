@@ -33,6 +33,7 @@ func _ready() -> void:
 	GameState.stats_changed.connect(_refresh_stats)
 	GameState.weapons_changed.connect(_refresh_weapon)
 	Events.boss_health_changed.connect(_on_boss_health_changed)
+	Events.message.connect(show_message)
 	_refresh_stats()
 	_refresh_weapon()
 

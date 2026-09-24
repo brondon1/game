@@ -47,13 +47,18 @@ static func generate(room_count: int) -> Dictionary:
 		if pair.has(boss) and not pair.has(parent[boss]):
 			links.erase(key)
 
-	# 挑一个离起点不太近的战斗房改成宝箱房
-	var candidates: Array[Vector2i] = []
+	# 挑两个战斗房，分别改成宝箱房和商店房：优先离起点远的，不够时才用起点旁边的
+	var near: Array[Vector2i] = []
+	var far: Array[Vector2i] = []
 	for cell: Vector2i in rooms:
-		if rooms[cell] == Room.Type.BATTLE and dist[cell] >= 2:
-			candidates.append(cell)
-	if not candidates.is_empty():
-		rooms[candidates.pick_random()] = Room.Type.CHEST
+		if rooms[cell] == Room.Type.BATTLE:
+			(far if dist[cell] >= 2 else near).append(cell)
+	near.shuffle()
+	far.shuffle()
+	var candidates := near + far # pop_back() 先取 far 里的
+	for special in [Room.Type.CHEST, Room.Type.SHOP]:
+		if not candidates.is_empty():
+			rooms[candidates.pop_back()] = special
 
 	return {"rooms": rooms, "links": links.values()}
 

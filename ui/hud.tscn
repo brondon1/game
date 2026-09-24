@@ -164,7 +164,7 @@ grow_vertical = 0
 theme_override_colors/font_outline_color = Color(0.1, 0.11, 0.17, 1)
 theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 8
-text = "WASD 移动 · 左键 射击 · 空格 技能 · Q 换枪 · E 拾取 · Esc 暂停"
+text = "WASD 移动 · 左键 射击 · 空格 技能 · Q 换枪 · E 交互 · Tab 地图"
 vertical_alignment = 2
 
 [node name="BossPanel" type="VBoxContainer" parent="."]
