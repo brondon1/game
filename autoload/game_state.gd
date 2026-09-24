@@ -25,6 +25,8 @@ var weapon_pool: Array[WeaponData] = [
 	preload("res://weapons/data/shotgun.tres"),
 	preload("res://weapons/data/smg.tres"),
 	preload("res://weapons/data/rifle.tres"),
+	preload("res://weapons/data/sword.tres"),
+	preload("res://weapons/data/hammer.tres"),
 ]
 
 var current_floor := 1

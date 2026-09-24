@@ -11,6 +11,8 @@ const BULLET_SCENE := preload("res://weapons/bullet.tscn")
 			_refresh()
 
 var _cooldown := 0.0
+var _swing_tween: Tween
+var _swing_side := 1.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var muzzle: Marker2D = $Muzzle
@@ -33,6 +35,9 @@ func fire(team: Bullet.Team, damage_mult := 1.0, fire_rate_mult := 1.0) -> void:
 		return
 	_cooldown = data.fire_interval / fire_rate_mult
 	var damage := maxi(1, roundi(data.damage * damage_mult))
+	if data.is_melee:
+		_swing(team, damage)
+		return
 	var spread := deg_to_rad(data.spread_degrees)
 	for i in data.bullets_per_shot:
 		var offset := randf_range(-spread, spread) * 0.5
@@ -48,6 +53,62 @@ func fire(team: Bullet.Team, damage_mult := 1.0, fire_rate_mult := 1.0) -> void:
 	create_tween().tween_property(sprite, "position:x", 0.0, 0.08)
 
 
+## 近战挥砍：伤害扇形范围内的所有目标，并打掉范围内的敌方子弹。
+func _swing(team: Bullet.Team, damage: int) -> void:
+	# 先把上一刀的挥动动画复位，这样 global_rotation 就是瞄准方向
+	if _swing_tween:
+		_swing_tween.kill()
+	rotation = 0.0
+	var aim := global_rotation
+	var center := global_position
+	var half_arc := deg_to_rad(data.melee_arc_degrees) / 2.0
+	var reach := data.melee_range + 6.0 # 加上目标自身的大致半径
+
+	var target_group := "enemies" if team == Bullet.Team.PLAYER else "player"
+	var hit_any := false
+	for node in get_tree().get_nodes_in_group(target_group):
+		var target := node as Node2D
+		if target == null or not target.has_method("take_damage"):
+			continue
+		if target is Enemy and not target.is_targetable():
+			continue
+		if _in_arc(center, aim, half_arc, reach, target.global_position + Vector2(0, -4)):
+			var dir := center.direction_to(target.global_position)
+			target.take_damage(damage, dir * data.knockback)
+			HitEffect.spawn(target.get_parent(), target.global_position, Color("f4f4f4"), 8)
+			hit_any = true
+
+	if data.deflects_bullets:
+		var bullet_group := "enemy_bullets" if team == Bullet.Team.PLAYER else "player_bullets"
+		for node in get_tree().get_nodes_in_group(bullet_group):
+			var bullet := node as Bullet
+			if bullet and _in_arc(center, aim, half_arc, reach, bullet.global_position):
+				bullet.destroy()
+				hit_any = true
+
+	if hit_any:
+		Events.screen_shake.emit(1.5)
+	SlashEffect.spawn(get_tree().current_scene, center, aim, data.melee_range, half_arc * 2.0, Color("f4f4f4"))
+
+	# 挥动动画：左右交替挥
+	_swing_side = -_swing_side
+	rotation = -half_arc * _swing_side
+	_swing_tween = create_tween()
+	_swing_tween.tween_property(self, "rotation", half_arc * _swing_side, 0.08)
+	_swing_tween.tween_property(self, "rotation", 0.0, 0.12)
+
+
+func _in_arc(center: Vector2, aim: float, half_arc: float, reach: float, point: Vector2) -> bool:
+	var offset := point - center
+	if offset.length() > reach:
+		return false
+	# 贴脸的目标不管角度都算命中
+	return offset.length() < 10.0 or absf(angle_difference(aim, offset.angle())) <= half_arc
+
+
 func _refresh() -> void:
+	if _swing_tween:
+		_swing_tween.kill()
+	rotation = 0.0
 	sprite.texture = data.texture if data else null
 	muzzle.position = data.muzzle_offset if data else Vector2.ZERO

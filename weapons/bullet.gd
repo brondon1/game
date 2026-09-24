@@ -43,6 +43,7 @@ func setup(p_team: Team, pos: Vector2, angle: float, speed: float, p_damage: int
 	collision_layer = LAYER_PLAYER_BULLET if is_player else LAYER_ENEMY_BULLET
 	collision_mask = LAYER_WORLD | (LAYER_ENEMY if is_player else LAYER_PLAYER)
 	sprite.texture = PLAYER_TEXTURE if is_player else ENEMY_TEXTURE
+	add_to_group("player_bullets" if is_player else "enemy_bullets") # 近战武器靠这个分组找到要打掉的子弹
 
 
 func _physics_process(delta: float) -> void:
@@ -63,6 +64,13 @@ func _on_body_entered(body: Node2D) -> void:
 		body.take_damage(damage, _velocity.normalized())
 		if piercing:
 			return
+	destroy()
+
+
+## 子弹消失（撞墙、命中或被近战打掉），带一个小火花。
+func destroy() -> void:
+	if _done:
+		return
 	_done = true
 	var color := Color("ffcd75") if team == Team.PLAYER else Color("ef7d57")
 	HitEffect.spawn(get_parent(), global_position, color)

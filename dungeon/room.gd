@@ -18,6 +18,10 @@ var type := Type.BATTLE
 ## 房间内部（可行走区域）的世界坐标范围
 var rect := Rect2()
 var doors: Array[Door] = []
+## 在地牢网格里的坐标（小地图用）
+var cell := Vector2i.ZERO
+## 玩家是否进过这个房间（小地图用）
+var visited := false
 
 var _state := State.IDLE
 var _entities: Node2D

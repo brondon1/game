@@ -4,7 +4,7 @@
 
 素材目前全是程序生成的占位像素图，玩法流程已经完整：
 
-> 主菜单 → 随机地牢 → 进房间锁门、分波刷怪 → 清完开门 → 宝箱房捡武器 → 打 Boss → 传送门 → 强化三选一 → 下一层 → 第 3 层 Boss 后通关 / 死亡结算 → 记录最高纪录
+> 主菜单 → 随机地牢（带小地图）→ 进房间锁门、分波刷怪 → 清完开门 → 宝箱房捡武器 → 打 Boss → 传送门 → 强化三选一 → 下一层 → 第 3 层 Boss 后通关 / 死亡结算 → 记录最高纪录
 
 ## 运行
 
@@ -32,8 +32,8 @@ autoload/
 player/                玩家：移动、自动瞄准、射击、受伤、护盾回复、拾取武器
 weapons/
   weapon_data.gd       武器数据（Resource）
-  data/*.tres          手枪、霰弹枪、冲锋枪、穿甲步枪
-  weapon.gd            按 WeaponData 开火（玩家和敌人都能用）
+  data/*.tres          枪：手枪、霰弹枪、冲锋枪、穿甲步枪；近战：骑士剑、大铁锤
+  weapon.gd            按 WeaponData 开火或挥砍（玩家和敌人都能用）
   bullet.gd            子弹：阵营决定和谁碰撞
 enemies/
   enemy.gd             敌人基类：出生预警、追击、接触伤害、闪白、击退、掉落
@@ -45,8 +45,8 @@ dungeon/
   room.gd              房间：进门锁门、分波刷怪、清空开门；宝箱房放奖励
   door.gd / portal.gd  门、传送门
 pickups/               金币、能量、药水、地上的武器
-common/                命中粒子、受击闪白 shader、震屏相机
-ui/                    主菜单、HUD、Buff 三选一、暂停菜单、结算
+common/                命中粒子、挥砍刀光、受击闪白 shader、震屏相机
+ui/                    主菜单、HUD、小地图、Buff 三选一、暂停菜单、结算
 assets/sprites/        占位像素图（可直接替换）
 ```
 
@@ -57,9 +57,13 @@ assets/sprites/        占位像素图（可直接替换）
 
 **加一把新武器**：在 `weapons/data/` 里右键新建一个 `WeaponData` 资源，填写伤害、射速、能耗、子弹数、散射等参数，然后把它加进 `autoload/game_state.gd` 的 `weapon_pool`。宝箱房会随机掉落它，不需要写代码。
 
+**加一把近战武器**：同样新建一个 `WeaponData` 资源，勾选“近战”分组里的 `is_melee`，再设置挥砍半径、扇形角度、击退倍率，以及能不能打掉敌人的子弹（骑士剑可以，大铁锤不行但伤害高、击退远）。近战武器只用到射击参数里的伤害、射击间隔和能耗。
+
 **加一种新敌人**：新建一个脚本 `extends Enemy`，重写 `_think(delta)`，返回每帧想移动的方向，需要开枪时调用 `shoot_bullet()`，可以参考 `gunner.gd`。再复制一份 `slime.tscn` 换上新贴图和脚本，最后在 `room.gd` 的 `_random_wave()` 里把它加进刷怪列表。
 
 **加一个新 Buff**：在 `game_state.gd` 的 `BUFFS` 里加一条，再在 `apply_buff()` 里写上效果。
+
+**小地图**：`ui/minimap.gd` 用地牢生成器输出的网格数据来画，只显示去过的房间和与之相邻的房间，Boss 房是红点，宝箱房是黄点，青色小点是玩家。方块大小和间距可以改 `ROOM_SIZE` / `SPACING`。
 
 **调难度**：
 - 楼层数：`GameState.FINAL_FLOOR`
@@ -76,8 +80,7 @@ assets/sprites/        占位像素图（可直接替换）
 
 ## 下一步可以做
 
-- [ ] 近战武器（挥砍的 Area2D 判定）
-- [ ] 小地图（`DungeonGenerator` 返回的 `rooms` 就是现成的网格数据）
+- [ ] 按 Tab 显示全屏大地图
 - [ ] 角色技能（元气骑士的双持、冲刺等），用一个冷却键触发
 - [ ] 房间里的障碍物和箱子，加 `NavigationAgent2D` 让敌人绕路
 - [ ] 音效（`AudioStreamPlayer2D`），可以用 jsfxr 快速做 8-bit 音效

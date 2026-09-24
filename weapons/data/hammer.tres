@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/hammer.png" id="2_tex"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "大铁锤"
+texture = ExtResource("2_tex")
+damage = 12
+fire_interval = 0.8
+energy_cost = 0
+is_melee = true
+melee_range = 34.0
+melee_arc_degrees = 160.0
+knockback = 2.5
+deflects_bullets = false

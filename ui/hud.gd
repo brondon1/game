@@ -16,6 +16,7 @@ var _message_tween: Tween
 @onready var boss_panel: Control = %BossPanel
 @onready var boss_bar: ProgressBar = %BossBar
 @onready var message: Label = %Message
+@onready var minimap: Minimap = %Minimap
 
 
 func _ready() -> void:
@@ -55,7 +56,7 @@ func _refresh_weapon() -> void:
 	if weapon == null:
 		weapon_label.text = ""
 		return
-	var text := "%s  能耗 %d" % [weapon.display_name, weapon.energy_cost]
+	var text := weapon.describe()
 	if GameState.weapons.size() > 1:
 		var other := GameState.weapons[(GameState.weapon_index + 1) % GameState.weapons.size()]
 		text += "\n[Q] 切换到 %s" % other.display_name

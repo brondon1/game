@@ -26,7 +26,7 @@ func _ready() -> void:
 func _refresh() -> void:
 	sprite.texture = data.texture if data else null
 	if data:
-		label.text = "[E] %s  能耗 %d" % [data.display_name, data.energy_cost]
+		label.text = "[E] " + data.describe()
 
 
 func _on_body_entered(body: Node2D) -> void:

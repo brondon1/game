@@ -21,3 +21,21 @@ extends Resource
 @export var bullet_range := 320.0
 ## 子弹是否穿透敌人
 @export var piercing := false
+
+@export_group("近战")
+## 勾选后变成近战武器：挥砍扇形范围内的所有敌人，并打掉范围内的敌方子弹。
+## 近战武器只使用 伤害、射击间隔、能耗 这几个射击参数。
+@export var is_melee := false
+## 挥砍半径（像素）
+@export var melee_range := 28.0
+## 挥砍扇形的角度（度）
+@export var melee_arc_degrees := 120.0
+## 击退倍率
+@export var knockback := 1.0
+## 能否打掉敌人的子弹
+@export var deflects_bullets := true
+
+
+## 显示在 HUD 和拾取提示上的简短说明。
+func describe() -> String:
+	return "%s  %s" % [display_name, "近战" if is_melee else "能耗 %d" % energy_cost]

@@ -63,10 +63,13 @@ func _build(layout: Dictionary) -> void:
 		tile_map.set_cell(c, 0, WALL_TILE)
 
 	# 4. 创建房间节点，在每条通道的入口放门
+	var room_by_cell := {}
 	for cell: Vector2i in rooms:
 		var r: Rect2i = room_rects[cell]
 		var room := Room.new()
 		room.name = "Room_%d_%d" % [cell.x, cell.y]
+		room.cell = cell
+		room_by_cell[cell] = room
 		room.setup(rooms[cell], Rect2(Vector2(r.position * TILE_SIZE), Vector2(r.size * TILE_SIZE)), entities)
 		for link: Array in links:
 			if link.has(cell):
@@ -76,6 +79,7 @@ func _build(layout: Dictionary) -> void:
 		if room.type == Room.Type.START:
 			player.global_position = room.rect.get_center()
 			player.get_node("Camera2D").reset_smoothing()
+	hud.minimap.setup(room_by_cell, links)
 
 
 func _room_size(type: Room.Type) -> Vector2i:
