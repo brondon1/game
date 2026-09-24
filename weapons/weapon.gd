@@ -65,9 +65,11 @@ func _swing(team: Bullet.Team, damage: int) -> void:
 	var half_arc := deg_to_rad(data.melee_arc_degrees) / 2.0
 	var reach := data.melee_range + 6.0 # 加上目标自身的大致半径
 
-	var target_group := "enemies" if team == Bullet.Team.PLAYER else "player"
+	var targets := get_tree().get_nodes_in_group("player")
+	if team == Bullet.Team.PLAYER:
+		targets = get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("breakables")
 	var hit_any := false
-	for node in get_tree().get_nodes_in_group(target_group):
+	for node in targets:
 		var target := node as Node2D
 		if target == null or not target.has_method("take_damage"):
 			continue

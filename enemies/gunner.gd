@@ -1,5 +1,5 @@
 extends Enemy
-## 远程敌人：和玩家保持距离、左右绕圈走位，定时朝玩家打出扇形子弹。
+## 远程敌人：和玩家保持距离、左右绕圈走位，定时朝玩家打出扇形子弹。被障碍物挡住时会绕过去找射击角度。
 
 @export var preferred_distance := 110.0
 @export var fire_interval := 2.0
@@ -37,8 +37,8 @@ func _think(delta: float) -> Vector2:
 	var to_player := player.global_position - global_position
 	var dist := to_player.length()
 	var dir := to_player / maxf(dist, 0.001)
-	if dist > preferred_distance + 20.0:
-		return dir
+	if dist > preferred_distance + 20.0 or not has_line_of_sight_to_player():
+		return chase_direction() # 太远或被挡住：靠近 / 绕过去
 	if dist < preferred_distance - 20.0:
 		return -dir
 	return dir.orthogonal() * _strafe_dir * 0.6

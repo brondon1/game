@@ -29,7 +29,7 @@ func _think(delta: float) -> Vector2:
 			_timer -= delta
 			if _timer <= 0.0:
 				_start_attack(_next_special)
-			return global_position.direction_to(player.global_position)
+			return chase_direction()
 		Attack.RING:
 			_update_shots(delta, 0.5, _fire_ring)
 		Attack.FAN:

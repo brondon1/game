@@ -10,8 +10,13 @@ const BATTLE_ROOM_SIZES: Array[Vector2i] = [Vector2i(13, 11), Vector2i(15, 11), 
 
 const DOOR_SCENE := preload("res://dungeon/door.tscn")
 const PORTAL_SCENE := preload("res://dungeon/portal.tscn")
+const CRATE_SCENE := preload("res://props/crate.tscn")
+## 烘焙导航网格时离墙留出的距离。敌人的碰撞圆半径 5、圆心比脚底（导航用的位置）高 3，
+## 再留 2 像素余量，这样沿着墙和石柱走时不会蹭到卡住。
+const AGENT_RADIUS := 10.0
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
+@onready var navigation: NavigationRegion2D = $Navigation
 @onready var rooms_root: Node2D = $Rooms
 @onready var entities: Node2D = $Entities
 @onready var player: Player = $Entities/Player
@@ -51,8 +56,18 @@ func _build(layout: Dictionary) -> void:
 	for link: Array in links:
 		_carve_corridor(link[0], link[1], floor_cells)
 
-	# 3. 所有紧挨地板（含斜角）但本身不是地板的格子都是墙
+	# 3. 战斗房和 Boss 房里的障碍物：石柱从地板里挖掉（下一步会变成墙），木箱之后再放
+	var obstacles := {}
+	for cell: Vector2i in rooms:
+		obstacles[cell] = ObstacleLayouts.plan(rooms[cell], room_rects[cell])
+		for p: Vector2i in obstacles[cell].pillars:
+			floor_cells.erase(p)
+
+	# 4. 所有紧挨地板（含斜角）但本身不是地板的格子都是墙（包括石柱）
 	var wall_cells := {}
+	for cell: Vector2i in obstacles:
+		for p: Vector2i in obstacles[cell].pillars:
+			wall_cells[p] = true # 石墩中间的格子不挨着地板，要单独标记
 	for c: Vector2i in floor_cells:
 		for dx in range(-1, 2):
 			for dy in range(-1, 2):
@@ -64,7 +79,7 @@ func _build(layout: Dictionary) -> void:
 	for c: Vector2i in wall_cells:
 		tile_map.set_cell(c, 0, WALL_TILE)
 
-	# 4. 创建房间节点，在每条通道的入口放门
+	# 5. 创建房间节点，在每条通道的入口放门，放木箱
 	var room_by_cell := {}
 	for cell: Vector2i in rooms:
 		var r: Rect2i = room_rects[cell]
@@ -73,6 +88,12 @@ func _build(layout: Dictionary) -> void:
 		room.cell = cell
 		room_by_cell[cell] = room
 		room.setup(rooms[cell], Rect2(Vector2(r.position * TILE_SIZE), Vector2(r.size * TILE_SIZE)), entities)
+		room.pillar_cells = obstacles[cell].pillars
+		room.crate_cells = obstacles[cell].crates
+		for c: Vector2i in room.crate_cells:
+			var crate: Crate = CRATE_SCENE.instantiate()
+			crate.position = Vector2(c * TILE_SIZE) + Vector2(TILE_SIZE * 0.5, TILE_SIZE - 2.0)
+			entities.add_child(crate)
 		for link: Array in links:
 			if link.has(cell):
 				var other: Vector2i = link[1] if link[0] == cell else link[0]
@@ -83,6 +104,26 @@ func _build(layout: Dictionary) -> void:
 			player.get_node("Camera2D").reset_smoothing()
 	hud.minimap.setup(room_by_cell, links)
 	map_overlay.setup(room_by_cell, links)
+	_bake_navigation()
+
+
+## 烘焙导航网格：只解析 TileMapLayer 的碰撞（墙和石柱），敌人据此绕开障碍物。
+## 木箱不参与烘焙（它们会被打碎），敌人碰到木箱会顺着滑开。
+func _bake_navigation() -> void:
+	var poly := NavigationPolygon.new()
+	poly.agent_radius = AGENT_RADIUS
+	poly.parsed_geometry_type = NavigationPolygon.PARSED_GEOMETRY_STATIC_COLLIDERS
+	poly.parsed_collision_mask = Bullet.LAYER_WORLD
+	poly.source_geometry_mode = NavigationPolygon.SOURCE_GEOMETRY_GROUPS_WITH_CHILDREN
+	poly.source_geometry_group_name = &"navigation_source"
+	var used := tile_map.get_used_rect()
+	var bounds := Rect2(Vector2(used.position * TILE_SIZE), Vector2(used.size * TILE_SIZE))
+	poly.add_outline(PackedVector2Array([
+		bounds.position, Vector2(bounds.end.x, bounds.position.y),
+		bounds.end, Vector2(bounds.position.x, bounds.end.y),
+	]))
+	navigation.navigation_polygon = poly
+	navigation.bake_navigation_polygon(false)
 
 
 func _room_size(type: Room.Type) -> Vector2i:

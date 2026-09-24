@@ -19,6 +19,8 @@ const BUFF := preload("res://assets/audio/buff.wav")
 const CLICK := preload("res://assets/audio/click.wav")
 const BUY := preload("res://assets/audio/buy.wav")
 const DENIED := preload("res://assets/audio/denied.wav")
+const CHEST_OPEN := preload("res://assets/audio/chest_open.wav")
+const CRATE_BREAK := preload("res://assets/audio/crate_break.wav")
 const VICTORY := preload("res://assets/audio/victory.wav")
 const GAME_OVER := preload("res://assets/audio/game_over.wav")
 

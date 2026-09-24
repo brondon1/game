@@ -2,6 +2,7 @@ class_name Enemy
 extends CharacterBody2D
 ## 敌人基类：出生预警 → 追击玩家、碰到造成接触伤害；受击闪白和击退，死亡掉落金币和能量。
 ## 子类重写 _think() 实现不同的 AI（返回想要移动的方向）。
+## 追击用 chase_direction()：能直接看到玩家就直线走，被石柱挡住时沿导航网格绕路。
 
 signal died(enemy: Enemy)
 
@@ -18,6 +19,9 @@ const BULLET_SCENE := preload("res://weapons/bullet.tscn")
 ## 出生前的预警时间（这段时间里半透明、不会动也不会受伤）
 @export var spawn_delay := 0.6
 
+## 多久重新计算一次绕路路线（秒）
+const REPATH_INTERVAL := 0.25
+
 ## 由房间根据楼层设置，用来让后面的楼层更难
 var hp_multiplier := 1.0
 var hp := 0
@@ -26,6 +30,8 @@ var player: Player
 var _knockback := Vector2.ZERO
 var _active := false
 var _dead := false
+var _nav: NavigationAgent2D
+var _repath_timer := 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -35,6 +41,10 @@ func _ready() -> void:
 	max_hp = roundi(max_hp * hp_multiplier)
 	hp = max_hp
 	player = get_tree().get_first_node_in_group("player") as Player
+	_nav = NavigationAgent2D.new()
+	_nav.path_desired_distance = 6.0
+	_nav.target_desired_distance = 6.0
+	add_child(_nav)
 	# 出生预警：从半透明淡入，结束后才开始行动
 	collision_layer = 0
 	sprite.modulate.a = 0.25
@@ -65,9 +75,24 @@ func _physics_process(delta: float) -> void:
 	_try_contact_damage()
 
 
-## AI：返回本帧想移动的方向（长度 0~1）。默认直接冲向玩家。
+## AI：返回本帧想移动的方向（长度 0~1）。默认追向玩家。
 func _think(_delta: float) -> Vector2:
-	return global_position.direction_to(player.global_position)
+	return chase_direction()
+
+
+## 朝玩家移动的方向：能直接看到玩家就直线走，被障碍物挡住时沿导航网格绕路。
+func chase_direction() -> Vector2:
+	var direct := global_position.direction_to(player.global_position)
+	if has_line_of_sight_to_player():
+		return direct
+	_repath_timer -= get_physics_process_delta_time()
+	if _repath_timer <= 0.0:
+		_repath_timer = REPATH_INTERVAL
+		_nav.target_position = player.global_position
+	if _nav.is_navigation_finished():
+		return direct
+	var next := _nav.get_next_path_position()
+	return direct if next.distance_to(global_position) < 1.0 else global_position.direction_to(next)
 
 
 func take_damage(amount: int, direction := Vector2.ZERO) -> void:
