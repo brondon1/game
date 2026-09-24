@@ -5,6 +5,8 @@ extends CharacterBody2D
 ## 追击用 chase_direction()：能直接看到玩家就直线走，被石柱挡住时沿导航网格绕路。
 
 signal died(enemy: Enemy)
+## 召唤 / 分裂出新的敌人时发出，房间靠它把新敌人也算进这一波
+signal spawned_minion(minion: Enemy)
 
 const PICKUP_SCENE := preload("res://pickups/pickup.tscn")
 const BULLET_SCENE := preload("res://weapons/bullet.tscn")
@@ -39,6 +41,7 @@ var _repath_timer := 0.0
 var _walk_time := 0.0
 var _slow_time := 0.0
 var _sprite_base_y := 0.0
+var _sprite_base_scale := Vector2.ONE
 
 @onready var sprite: Sprite2D = $Sprite2D
 
@@ -49,6 +52,7 @@ func _ready() -> void:
 	hp = max_hp
 	player = get_tree().get_first_node_in_group("player") as Player
 	_sprite_base_y = sprite.position.y
+	_sprite_base_scale = sprite.scale
 	BlobShadow.add_to(self, shadow_scale)
 	_nav = NavigationAgent2D.new()
 	_nav.path_desired_distance = 6.0
@@ -97,10 +101,10 @@ func _animate(delta: float, move_dir: Vector2) -> void:
 		_walk_time += delta * 12.0
 		var s := sin(_walk_time)
 		sprite.position.y = _sprite_base_y - absf(s) * 1.5
-		sprite.scale = Vector2(1.0 + s * 0.06, 1.0 - s * 0.06)
+		sprite.scale = _sprite_base_scale * Vector2(1.0 + s * 0.06, 1.0 - s * 0.06)
 	else:
 		sprite.position.y = lerpf(sprite.position.y, _sprite_base_y, 0.3)
-		sprite.scale = sprite.scale.lerp(Vector2.ONE, 0.3)
+		sprite.scale = sprite.scale.lerp(_sprite_base_scale, 0.3)
 
 
 ## AI：返回本帧想移动的方向（长度 0~1）。默认追向玩家。
@@ -140,6 +144,16 @@ func take_damage(amount: int, direction := Vector2.ZERO) -> void:
 func apply_slow(duration: float) -> void:
 	_slow_time = maxf(_slow_time, duration)
 	sprite.self_modulate = Color(0.6, 0.85, 1.4)
+
+
+## 召唤或分裂出一个新敌人（和自己同样的血量倍率），并通知房间。
+func spawn_minion(scene: PackedScene, pos: Vector2) -> Enemy:
+	var minion: Enemy = scene.instantiate()
+	minion.position = pos
+	minion.hp_multiplier = hp_multiplier
+	get_parent().add_child(minion)
+	spawned_minion.emit(minion)
+	return minion
 
 
 ## 朝某个角度发射一颗敌方子弹，子类可复用。

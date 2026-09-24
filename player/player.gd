@@ -24,7 +24,7 @@ var _offhand_on := false
 var _dash_velocity := Vector2.ZERO
 var _dash_time := 0.0
 var _afterimage_timer := 0.0
-var _walk_time := 0.0
+var _anim_time := 0.0
 var _dust_timer := 0.0
 var _sprite_base_y := 0.0
 
@@ -39,6 +39,7 @@ func _ready() -> void:
 	add_to_group("player")
 	var character := GameState.character
 	sprite.texture = character.texture
+	sprite.hframes = character.frame_count()
 	_sprite_base_y = sprite.position.y
 	BlobShadow.add_to(self)
 	base_speed = character.speed
@@ -67,22 +68,28 @@ func _physics_process(delta: float) -> void:
 	_update_timers(delta)
 
 
-## 走路时上下颠一颠、左右晃一晃，并扬起一点灰尘。
+## 逐帧动画：站着时播放 2 帧呼吸，走路时播放 4 帧迈腿，并扬起一点灰尘。
+## 只有一帧的贴图（比如自己换的素材）退回到代码颠动。
 func _animate(delta: float) -> void:
 	if _dash_time > 0.0:
 		return
-	if velocity.length() > 5.0:
-		_walk_time += delta * 14.0
-		sprite.position.y = _sprite_base_y - absf(sin(_walk_time)) * 1.5
-		sprite.rotation = sin(_walk_time) * 0.07
+	_anim_time += delta
+	var moving := velocity.length() > 5.0
+	if sprite.hframes >= CharacterData.IDLE_FRAMES + CharacterData.WALK_FRAMES:
+		if moving:
+			sprite.frame = CharacterData.IDLE_FRAMES + int(_anim_time * 10.0) % CharacterData.WALK_FRAMES
+		else:
+			sprite.frame = int(_anim_time * 2.0) % CharacterData.IDLE_FRAMES
+	elif moving:
+		sprite.position.y = _sprite_base_y - absf(sin(_anim_time * 14.0)) * 1.5
+	else:
+		sprite.position.y = _sprite_base_y
+	sprite.rotation = 0.0
+	if moving:
 		_dust_timer -= delta
 		if _dust_timer <= 0.0:
 			_dust_timer = 0.22
 			HitEffect.spawn(get_parent(), global_position, Color(0.7, 0.72, 0.85, 0.45), 3, 0.3)
-	else:
-		_walk_time = 0.0
-		sprite.position.y = _sprite_base_y
-		sprite.rotation = 0.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -239,6 +246,8 @@ func _update_dash(delta: float) -> void:
 func _spawn_afterimage() -> void:
 	var ghost := Sprite2D.new()
 	ghost.texture = sprite.texture
+	ghost.hframes = sprite.hframes
+	ghost.frame = sprite.frame
 	ghost.flip_h = sprite.flip_h
 	ghost.rotation = sprite.rotation
 	ghost.global_position = sprite.global_position

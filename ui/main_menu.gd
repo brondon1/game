@@ -27,7 +27,7 @@ func _build_character_buttons() -> void:
 		var button := Button.new()
 		button.toggle_mode = true
 		button.button_group = group
-		button.icon = character.texture
+		button.icon = character.icon()
 		button.expand_icon = true
 		button.custom_minimum_size = Vector2(40, 40)
 		button.tooltip_text = character.display_name

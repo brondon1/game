@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://enemies/splitter.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/big_slime.png" id="2_tex"]
+[ext_resource type="Shader" path="res://common/flash.gdshader" id="3_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_flash"]
+resource_local_to_scene = true
+shader = ExtResource("3_shader")
+shader_parameter/flash = 0.0
+shader_parameter/flash_color = Color(1, 1, 1, 1)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 7.0
+
+[node name="Splitter" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 5
+motion_mode = 1
+script = ExtResource("1_script")
+max_hp = 18
+speed = 28.0
+contact_range = 15.0
+coin_drop = 1
+death_color = Color(0.71, 0.31, 0.53, 1)
+shadow_scale = 1.5
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_flash")
+position = Vector2(0, -8)
+texture = ExtResource("2_tex")
+
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("CircleShape2D_body")

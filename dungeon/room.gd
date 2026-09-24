@@ -9,6 +9,18 @@ enum State { IDLE, FIGHTING, CLEARED }
 const SLIME_SCENE := preload("res://enemies/slime.tscn")
 const GUNNER_SCENE := preload("res://enemies/gunner.tscn")
 const BOSS_SCENE := preload("res://enemies/boss.tscn")
+
+## 刷怪表：[敌人场景, 从第几层开始出现, 出现权重]。加新敌人就在这里加一行。
+const ENEMY_TABLE := [
+	[SLIME_SCENE, 1, 5.0],
+	[preload("res://enemies/bat.tscn"), 1, 3.0],
+	[GUNNER_SCENE, 1, 3.0],
+	[preload("res://enemies/charger.tscn"), 1, 2.0],
+	[preload("res://enemies/splitter.tscn"), 2, 2.0],
+	[preload("res://enemies/spiker.tscn"), 2, 2.0],
+	[preload("res://enemies/bomber.tscn"), 2, 2.0],
+	[preload("res://enemies/summoner.tscn"), 3, 1.5],
+]
 const SHOP_ITEM_SCENE := preload("res://shop/shop_item.tscn")
 const MERCHANT_TEXTURE := preload("res://assets/sprites/merchant.png")
 const CHEST_SCENE := preload("res://props/chest.tscn")
@@ -33,6 +45,7 @@ var pillar_cells: Array[Vector2i] = []
 var crate_cells: Array[Vector2i] = []
 
 var _state := State.IDLE
+var _rng := RandomNumberGenerator.new()
 var _entities: Node2D
 var _waves_left := 0
 var _alive := 0
@@ -103,17 +116,23 @@ func _spawn_wave() -> void:
 		enemy.position = rect.get_center() if type == Type.BOSS else _random_spawn_point()
 		enemy.hp_multiplier = GameState.enemy_hp_mult()
 		enemy.died.connect(_on_enemy_died)
+		enemy.spawned_minion.connect(_track_minion)
 		_entities.add_child(enemy)
 		_alive += 1
 
 
-## 一波敌人的组成：楼层越高越多，远程怪比例越高。
+## 一波敌人的组成：楼层越高越多、种类越多（按刷怪表的权重随机）。
 func _random_wave() -> Array[PackedScene]:
+	var scenes: Array[PackedScene] = []
+	var weights: Array[float] = []
+	for entry: Array in ENEMY_TABLE:
+		if GameState.current_floor >= entry[1]:
+			scenes.append(entry[0])
+			weights.append(entry[2])
 	var count := 2 + GameState.current_floor + randi_range(0, 1)
-	var gunner_chance := 0.25 + 0.1 * GameState.current_floor
 	var wave: Array[PackedScene] = []
 	for i in count:
-		wave.append(GUNNER_SCENE if randf() < gunner_chance else SLIME_SCENE)
+		wave.append(scenes[_rng.rand_weighted(weights)])
 	return wave
 
 
@@ -136,6 +155,13 @@ func is_blocked(point: Vector2) -> bool:
 		if Rect2(Vector2(c * TILE_SIZE), Vector2.ONE * TILE_SIZE).grow(8.0).has_point(point):
 			return true
 	return false
+
+
+## 分裂出的小史莱姆、召唤出的蝙蝠也要打完才算清空这一波。
+func _track_minion(minion: Enemy) -> void:
+	_alive += 1
+	minion.died.connect(_on_enemy_died)
+	minion.spawned_minion.connect(_track_minion)
 
 
 func _on_enemy_died(_enemy: Enemy) -> void:
