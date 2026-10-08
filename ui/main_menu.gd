@@ -8,10 +8,12 @@ const SELECTED_TEXTURE := preload("res://assets/ui/button_selected.png")
 @onready var record_label: Label = %RecordLabel
 @onready var characters_box: HBoxContainer = %Characters
 @onready var character_info: Label = %CharacterInfo
+@onready var upgrade_button: Button = %UpgradeButton
 
 
 func _ready() -> void:
 	start_button.pressed.connect(_start)
+	upgrade_button.pressed.connect(_upgrade)
 	quit_button.pressed.connect(get_tree().quit)
 	quit_button.visible = not (OS.has_feature("web") or OS.has_feature("ios")) # 网页版和 iOS 不能自己退出
 	if GameState.best_floor > 0:
@@ -50,15 +52,35 @@ func _select(character: CharacterData) -> void:
 	GameState.character = character
 	var skill: Skill = character.skill_scene.instantiate()
 	var level := GameState.level_of(character)
-	var xp := GameState.xp_of(character)
-	var progress := "满级" if level >= GameState.MAX_LEVEL else "经验 %d/%d" % [
-		xp - GameState.xp_for_level(level), GameState.xp_for_level(level + 1) - GameState.xp_for_level(level)]
 	var bonus := GameState.level_bonus(character)
-	character_info.text = "%s　Lv.%d（%s）\n生命 %d · 护盾 %d · 能量 %d\n技能【%s】%s" % [
-		character.display_name, level, progress,
-		character.max_hp + bonus.hp, character.max_shield + bonus.shield, character.max_energy + bonus.energy,
-		skill.display_name, skill.description]
+	var stats := "初始属性：生命 %d" % (character.max_hp + bonus.hp)
+	if GameState.has_shield(character): # 只有骑士有护盾
+		stats += " · 护盾 %d" % (character.max_shield + bonus.shield)
+	stats += " · 能量 %d" % (character.max_energy + bonus.energy)
+	character_info.text = "%s　Lv.%d · 经验 %d\n%s\n技能【%s】%s" % [
+		character.display_name, level, GameState.xp_of(character), stats, skill.display_name, skill.description]
+	_refresh_upgrade()
 	skill.free()
+
+
+## 升级按钮：花经验永久提升初始属性。经验不够或满级时按钮变灰。
+func _refresh_upgrade() -> void:
+	var character := GameState.character
+	var level := GameState.level_of(character)
+	if level >= GameState.MAX_LEVEL:
+		upgrade_button.text = "已满级"
+		upgrade_button.disabled = true
+		return
+	var cost := GameState.upgrade_cost(level)
+	upgrade_button.disabled = not GameState.can_upgrade(character)
+	upgrade_button.text = "升级：%s（%s %d 经验）" % [
+		GameState.next_reward_text(character), "需要" if upgrade_button.disabled else "花费", cost]
+
+
+func _upgrade() -> void:
+	if GameState.upgrade(GameState.character):
+		Sound.play(Sound.BUFF, 0.0, 0.0)
+		_select(GameState.character)
 
 
 func _start() -> void:

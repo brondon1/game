@@ -136,6 +136,10 @@ func _play_message(text: String) -> void:
 func _refresh_stats() -> void:
 	_set_bar(hp_bar, hp_label, GameState.hp, GameState.max_hp)
 	_set_bar(shield_bar, shield_label, GameState.shield, GameState.max_shield)
+	var shield_row := shield_bar.get_parent() as Control
+	if shield_row.visible != (GameState.max_shield > 0): # 只有骑士有护盾，其他角色隐藏这一行
+		shield_row.visible = GameState.max_shield > 0
+		stats_panel.reset_size.call_deferred()
 	_set_bar(energy_bar, energy_label, GameState.energy, GameState.max_energy)
 	floor_label.text = "第 %d/%d 层" % [GameState.current_floor, GameState.FINAL_FLOOR]
 	coin_label.text = str(GameState.coins)

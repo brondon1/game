@@ -260,11 +260,11 @@ func _on_room_cleared(room: Room) -> void:
 	if room.type == Room.Type.BOSS:
 		_spawn_portal.call_deferred(room.rect.get_center())
 		hud.show_message("传送门已开启")
-		# 通过这一层：角色获得经验，升级的奖励立即生效
-		var result := GameState.grant_floor_xp()
-		hud.show_message("经验 +%d" % result.xp, true)
-		if not result.rewards.is_empty():
-			hud.show_message("升到 Lv.%d！%s" % [result.level, "，".join(PackedStringArray(result.rewards))], true)
+		# 通过这一层：角色获得经验（回主菜单花经验升级，局内不会自动升级）
+		var gained := GameState.grant_floor_xp()
+		hud.show_message("经验 +%d" % gained, true)
+		if GameState.can_upgrade(GameState.character):
+			hud.show_message("经验够了，回主菜单可以升级", true)
 
 
 func _spawn_portal(pos: Vector2) -> void:

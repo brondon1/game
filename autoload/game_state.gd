@@ -17,7 +17,6 @@ const MAX_WEAPONS := 2
 ## 每层通关后三选一的强化。新增 Buff：在这里加一条，再在 apply_buff() 里写效果。
 const BUFFS := [
 	{"id": "max_hp", "name": "强健体魄", "desc": "生命上限 +2\n并回满生命"},
-	{"id": "max_shield", "name": "坚固护甲", "desc": "护盾上限 +1"},
 	{"id": "max_energy", "name": "能量扩容", "desc": "能量上限 +60\n并回满能量"},
 	{"id": "damage", "name": "锋利子弹", "desc": "所有武器伤害 +25%"},
 	{"id": "fire_rate", "name": "快速扳机", "desc": "射速 +20%"},
@@ -37,15 +36,16 @@ const ITEMS := {
 ## 限时药剂的持续时间（秒）
 const BOOST_TIME := 30.0
 
-## 角色等级：每个角色单独升级，经验存档。每通过一层获得经验（越深越多），
-## 升级依次提升护盾、生命、能量上限。LEVEL_REWARDS 的第 i 项是升到第 i + 2 级时的奖励。
+## 角色等级：每个角色单独升级。在地牢里每通过一层获得经验（越深越多），回到主菜单花经验升级，
+## 永久提升角色的初始属性（只对新开的一局生效）。LEVEL_REWARDS 的第 i 项是升到第 i + 2 级时的奖励。
+## 只有骑士有护盾，其他角色的"初始护盾 +1"换成"初始生命 +1"（见 reward_stat()）。
 const MAX_LEVEL := 10
 const LEVEL_REWARDS := [
 	["shield", 1], ["hp", 1], ["energy", 30],
 	["shield", 1], ["hp", 1], ["energy", 30],
 	["shield", 1], ["hp", 1], ["shield", 1],
 ]
-const REWARD_NAMES := {"shield": "护盾上限", "hp": "生命上限", "energy": "能量上限"}
+const REWARD_NAMES := {"shield": "初始护盾", "hp": "初始生命", "energy": "初始能量"}
 
 ## 主菜单里可选的角色。新增角色：新建一个 CharacterData 资源，把路径加进来。
 ## （角色 → 技能脚本 → 又会用到 GameState，所以这里不能 preload，在 _ready 里再加载）
@@ -104,8 +104,9 @@ var weapon_index := 0
 
 var best_floor := 0
 var wins := 0
-## 每个角色的累计经验（角色 id → 经验），角色 id 是资源文件名（knight、ranger……）
+## 每个角色还没花掉的经验、当前等级（角色 id → 数值），角色 id 是资源文件名（knight、ranger……）
 var character_xp := {}
+var character_level := {}
 ## 本局获得的经验（结算界面显示）
 var run_xp := 0
 ## 正在生效的限时药剂：道具 id → 剩余秒数
@@ -311,9 +312,6 @@ func apply_buff(id: String) -> void:
 		"max_hp":
 			max_hp += 2
 			hp = max_hp
-		"max_shield":
-			max_shield += 1
-			shield = max_shield
 		"max_energy":
 			max_energy += 60
 			energy = max_energy
@@ -334,32 +332,61 @@ static func character_id(ch: CharacterData) -> String:
 	return ch.resource_path.get_file().get_basename()
 
 
+## 这个角色还没花掉的经验
 func xp_of(ch: CharacterData) -> int:
 	return character_xp.get(character_id(ch), 0)
 
 
-## 升到 level 级一共需要多少经验（1 级是 0）。每升一级比上一级多要 20 点。
-static func xp_for_level(level: int) -> int:
-	var total := 0
-	for l in range(1, level):
-		total += 40 + 20 * (l - 1)
-	return total
-
-
 func level_of(ch: CharacterData) -> int:
-	var xp := xp_of(ch)
-	var level := 1
-	while level < MAX_LEVEL and xp >= xp_for_level(level + 1):
-		level += 1
-	return level
+	return character_level.get(character_id(ch), 1)
+
+
+## 从 level 级升到下一级要花多少经验：40 起，每级多 20
+static func upgrade_cost(level: int) -> int:
+	return 40 + 20 * (level - 1)
+
+
+func can_upgrade(ch: CharacterData) -> bool:
+	var level := level_of(ch)
+	return level < MAX_LEVEL and xp_of(ch) >= upgrade_cost(level)
+
+
+## 下一级的奖励说明，比如"初始护盾 +1"；满级返回空字符串
+func next_reward_text(ch: CharacterData) -> String:
+	var level := level_of(ch)
+	if level >= MAX_LEVEL:
+		return ""
+	return "%s +%d" % [REWARD_NAMES[reward_stat(ch, level - 1)], LEVEL_REWARDS[level - 1][1]]
+
+
+## 在主菜单花经验升一级（只改初始属性，下一局开始生效）。经验不够或满级时返回 false。
+func upgrade(ch: CharacterData) -> bool:
+	if not can_upgrade(ch):
+		return false
+	var id := character_id(ch)
+	character_xp[id] = xp_of(ch) - upgrade_cost(level_of(ch))
+	character_level[id] = level_of(ch) + 1
+	_save()
+	return true
 
 
 ## 这个角色因为等级获得的属性加成：{"shield": .., "hp": .., "energy": ..}
 func level_bonus(ch: CharacterData) -> Dictionary:
 	var bonus := {"shield": 0, "hp": 0, "energy": 0}
 	for i in level_of(ch) - 1:
-		bonus[LEVEL_REWARDS[i][0]] += LEVEL_REWARDS[i][1]
+		bonus[reward_stat(ch, i)] += LEVEL_REWARDS[i][1]
 	return bonus
+
+
+## 第 i 项升级奖励对这个角色加的是什么属性。只有骑士有护盾，其他角色的"护盾 +1"换成"生命 +1"。
+static func reward_stat(ch: CharacterData, i: int) -> String:
+	var stat: String = LEVEL_REWARDS[i][0]
+	return "hp" if stat == "shield" and not has_shield(ch) else stat
+
+
+## 这个角色有没有护盾（只有骑士有）
+static func has_shield(ch: CharacterData) -> bool:
+	return ch.max_shield > 0
 
 
 ## 通过一层获得的经验：越深越多
@@ -367,32 +394,13 @@ func floor_xp(floor_number: int) -> int:
 	return 15 + 10 * floor_number
 
 
-## 通过当前这一层：给当前角色加经验并存档。升级的奖励立即生效（本局也能用上）。
-## 返回 {"xp": 获得的经验, "level": 现在的等级, "rewards": 这次升级获得的奖励说明}
-func grant_floor_xp() -> Dictionary:
-	var old_level := level_of(character)
+## 通过当前这一层：给当前角色加经验并存档（回主菜单再花经验升级），返回获得的经验。
+func grant_floor_xp() -> int:
 	var gained := floor_xp(current_floor)
 	character_xp[character_id(character)] = xp_of(character) + gained
 	run_xp += gained
-	var new_level := level_of(character)
-	var rewards: Array[String] = []
-	for i in range(old_level - 1, new_level - 1):
-		var stat: String = LEVEL_REWARDS[i][0]
-		var amount: int = LEVEL_REWARDS[i][1]
-		rewards.append("%s +%d" % [REWARD_NAMES[stat], amount])
-		match stat:
-			"shield":
-				max_shield += amount
-				shield += amount
-			"hp":
-				max_hp += amount
-				hp += amount
-			"energy":
-				max_energy += amount
-				energy += amount
-	stats_changed.emit()
 	_save()
-	return {"xp": gained, "level": new_level, "rewards": rewards}
+	return gained
 
 
 # ---------- 存档 ----------
@@ -411,6 +419,8 @@ func _save() -> void:
 	cfg.set_value("record", "character", characters.find(character))
 	for id: String in character_xp:
 		cfg.set_value("xp", id, character_xp[id])
+	for id: String in character_level:
+		cfg.set_value("level", id, character_level[id])
 	cfg.save(SAVE_PATH)
 
 
@@ -423,4 +433,7 @@ func _load_record() -> void:
 		if cfg.has_section("xp"):
 			for id in cfg.get_section_keys("xp"):
 				character_xp[id] = cfg.get_value("xp", id, 0)
+		if cfg.has_section("level"):
+			for id in cfg.get_section_keys("level"):
+				character_level[id] = cfg.get_value("level", id, 1)
 		character = characters[clampi(index, 0, characters.size() - 1)]

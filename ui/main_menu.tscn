@@ -60,6 +60,12 @@ layout_mode = 2
 text = "骑士"
 horizontal_alignment = 1
 
+[node name="UpgradeButton" type="Button" parent="Center/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+text = "升级"
+
 [node name="RecordLabel" type="Label" parent="Center/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -67,16 +73,19 @@ theme_override_colors/font_color = Color(0.447, 0.839, 0.808, 1)
 text = "准备好进入地牢了吗？"
 horizontal_alignment = 1
 
-[node name="StartButton" type="Button" parent="Center/VBox"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+[node name="Buttons" type="HBoxContainer" parent="Center/VBox"]
 layout_mode = 2
-size_flags_horizontal = 4
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="StartButton" type="Button" parent="Center/VBox/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
 text = "开始游戏"
 
-[node name="QuitButton" type="Button" parent="Center/VBox"]
+[node name="QuitButton" type="Button" parent="Center/VBox/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
+custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
-size_flags_horizontal = 4
 text = "退出游戏"
