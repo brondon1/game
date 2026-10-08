@@ -183,11 +183,13 @@ func _update_aim() -> void:
 ## 自动射击：门关着（在打怪）时，只要瞄着的敌人子弹打得到就自动开火；
 ## 近战武器等敌人进了攻击范围再挥。在暂停菜单里可以关掉。
 func _wants_auto_fire() -> bool:
-	if not GameState.auto_fire or not GameState.in_combat or not is_instance_valid(_aim_target):
+	if not GameState.auto_fire or not GameState.in_combat:
 		return false
 	if weapon.data and weapon.data.is_melee:
-		return global_position.distance_to(_aim_target.global_position) <= weapon.data.melee_range + 8.0
-	return has_clear_shot(_aim_target.global_position + Vector2(0, -4))
+		if weapon.incoming_bullet_in_reach(Bullet.Team.PLAYER): # 子弹飞到刀前也自动挥刀挡掉
+			return true
+		return is_instance_valid(_aim_target) and global_position.distance_to(_aim_target.global_position) <= weapon.data.melee_range + 8.0
+	return is_instance_valid(_aim_target) and has_clear_shot(_aim_target.global_position + Vector2(0, -4))
 
 
 ## 瞄准范围内最近的敌人（自动瞄准和刺客技能都用它）。

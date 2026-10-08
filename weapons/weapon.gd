@@ -13,6 +13,16 @@ const BULLET_SCENE := preload("res://weapons/bullet.tscn")
 var _cooldown := 0.0
 var _swing_tween: Tween
 var _swing_side := 1.0
+## 挥刀期间一直能打掉飞进扇形里的子弹（不只是出刀那一帧），剩余时间和这一刀的参数
+var _deflect_left := 0.0
+var _deflect_team := Bullet.Team.PLAYER
+var _deflect_half_arc := 0.0
+var _deflect_reach := 0.0
+
+## 挥刀后多长时间内还能打掉子弹
+const DEFLECT_WINDOW := 0.18
+## 打子弹的范围比砍人再大一点，快子弹一帧能飞好几像素
+const DEFLECT_EXTRA_REACH := 10.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var muzzle: Marker2D = $Muzzle
@@ -26,6 +36,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)
+	if _deflect_left > 0.0:
+		_deflect_left -= delta
+		_deflect_bullets(_deflect_team, get_parent().global_rotation, _deflect_half_arc, _deflect_reach)
 
 
 func is_ready_to_fire() -> bool:
@@ -102,13 +115,12 @@ func _swing(team: Bullet.Team, damage: int) -> void:
 			hit_any = true
 
 	if data.deflects_bullets:
-		var bullet_group := "enemy_bullets" if team == Bullet.Team.PLAYER else "player_bullets"
-		for node in get_tree().get_nodes_in_group(bullet_group):
-			var bullet := node as Bullet
-			if bullet and _in_arc(center, aim, half_arc, reach, bullet.global_position):
-				bullet.destroy()
-				Sound.play(Sound.DEFLECT, -4.0)
-				hit_any = true
+		_deflect_team = team
+		_deflect_half_arc = half_arc
+		_deflect_reach = reach + DEFLECT_EXTRA_REACH
+		_deflect_left = DEFLECT_WINDOW
+		if _deflect_bullets(team, aim, half_arc, _deflect_reach) > 0:
+			hit_any = true
 
 	if hit_any:
 		Events.screen_shake.emit(1.5)
@@ -126,6 +138,35 @@ func _swing(team: Bullet.Team, damage: int) -> void:
 		rotation = -half_arc * _swing_side
 		_swing_tween.tween_property(self, "rotation", half_arc * _swing_side, 0.08)
 		_swing_tween.tween_property(self, "rotation", 0.0, 0.12)
+
+
+## 打掉扇形里的对方子弹，返回打掉了几颗。每颗都冒一团黄色火花。
+func _deflect_bullets(team: Bullet.Team, aim: float, half_arc: float, reach: float) -> int:
+	var bullet_group := "enemy_bullets" if team == Bullet.Team.PLAYER else "player_bullets"
+	var count := 0
+	for node in get_tree().get_nodes_in_group(bullet_group):
+		var bullet := node as Bullet
+		if bullet and not bullet.is_queued_for_deletion() and _in_arc(global_position, aim, half_arc, reach, bullet.global_position):
+			HitEffect.spawn(bullet.get_parent(), bullet.global_position, Color("facb3e"), 6, 0.7)
+			bullet.destroy()
+			count += 1
+	if count > 0:
+		Sound.play(Sound.DEFLECT, -4.0)
+	return count
+
+
+## 近战武器手上，挥刀范围里有没有飞过来的对方子弹（自动射击时用来自动挥刀挡子弹）
+func incoming_bullet_in_reach(team: Bullet.Team) -> bool:
+	if data == null or not data.is_melee or not data.deflects_bullets:
+		return false
+	var bullet_group := "enemy_bullets" if team == Bullet.Team.PLAYER else "player_bullets"
+	var half_arc := deg_to_rad(data.melee_arc_degrees) / 2.0
+	var reach := data.melee_range + 6.0 + DEFLECT_EXTRA_REACH
+	for node in get_tree().get_nodes_in_group(bullet_group):
+		var bullet := node as Node2D
+		if bullet and _in_arc(global_position, get_parent().global_rotation, half_arc, reach, bullet.global_position):
+			return true
+	return false
 
 
 func _in_arc(center: Vector2, aim: float, half_arc: float, reach: float, point: Vector2) -> bool:

@@ -16,4 +16,3 @@ is_melee = true
 melee_range = 34.0
 melee_arc_degrees = 160.0
 knockback = 2.5
-deflects_bullets = false
