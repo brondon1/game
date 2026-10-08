@@ -60,7 +60,7 @@ func _physics_process(delta: float) -> void:
 
 
 ## 技能节点被移除（比如进入下一层时场景重新加载）时，确保持续效果被撤销，
-## 否则像“狂暴”这样临时加的属性会永久留下来。
+## 否则像“疾风步”这样临时加的属性会永久留下来。
 func _exit_tree() -> void:
 	if _active_left > 0.0:
 		_active_left = 0.0

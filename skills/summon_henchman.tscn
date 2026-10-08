@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://skills/summon_henchman.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/summon.wav" id="2_sound"]
+
+[node name="SummonHenchman" type="Node"]
+script = ExtResource("1_script")
+sound = ExtResource("2_sound")
+display_name = "召唤小弟"
+description = "召唤一个蛮族小弟帮你砍敌人，最多同时 4 个"
+cooldown = 5.0
