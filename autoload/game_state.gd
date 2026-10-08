@@ -121,8 +121,9 @@ var weapon_index := 0
 
 var best_floor := 0
 var wins := 0
-## 每个角色还没花掉的经验、当前等级（角色 id → 数值），角色 id 是资源文件名（knight、ranger……）
-var character_xp := {}
+## 还没花掉的经验：所有角色共用一份（和金币一样），找哪个角色升级都从这里扣
+var xp := 0
+## 每个角色的等级（角色 id → 等级），角色 id 是资源文件名（knight、ranger……）
 var character_level := {}
 ## 本局获得的经验（结算界面显示）
 var run_xp := 0
@@ -414,9 +415,9 @@ static func character_id(ch: CharacterData) -> String:
 	return ch.resource_path.get_file().get_basename()
 
 
-## 这个角色还没花掉的经验
-func xp_of(ch: CharacterData) -> int:
-	return character_xp.get(character_id(ch), 0)
+## 能用来给这个角色升级的经验（所有角色共用一份，参数留着方便以后改回分开算）
+func xp_of(_ch: CharacterData) -> int:
+	return xp
 
 
 func level_of(ch: CharacterData) -> int:
@@ -515,7 +516,7 @@ func upgrade(ch: CharacterData) -> bool:
 	if not can_upgrade(ch):
 		return false
 	var id := character_id(ch)
-	character_xp[id] = xp_of(ch) - upgrade_cost(level_of(ch))
+	xp -= upgrade_cost(level_of(ch))
 	character_level[id] = level_of(ch) + 1
 	save_progress()
 	return true
@@ -558,10 +559,10 @@ func grant_floor_coins() -> int:
 	return gained
 
 
-## 通过当前这一层：给当前角色加经验并存档（回大厅再花经验升级），返回获得的经验。
+## 通过当前这一层：加经验并存档（回大厅找任意角色花经验升级），返回获得的经验。
 func grant_floor_xp() -> int:
 	var gained := floor_xp(current_floor)
-	character_xp[character_id(character)] = xp_of(character) + gained
+	xp += gained
 	run_xp += gained
 	save_progress()
 	return gained
@@ -645,8 +646,7 @@ func save_progress() -> void:
 	cfg.set_value("record", "best_floor", best_floor)
 	cfg.set_value("record", "wins", wins)
 	cfg.set_value("record", "character", characters.find(character))
-	for id: String in character_xp:
-		cfg.set_value("xp", id, character_xp[id])
+	cfg.set_value("record", "xp", xp)
 	for id: String in character_level:
 		cfg.set_value("level", id, character_level[id])
 	cfg.set_value("record", "coins", coins)
@@ -666,9 +666,10 @@ func _load_record() -> void:
 		best_floor = cfg.get_value("record", "best_floor", 0)
 		wins = cfg.get_value("record", "wins", 0)
 		var index: int = cfg.get_value("record", "character", 0)
-		if cfg.has_section("xp"):
+		xp = cfg.get_value("record", "xp", 0)
+		if cfg.has_section("xp"): # 老存档里经验是每个角色分开存的：合并成一份
 			for id in cfg.get_section_keys("xp"):
-				character_xp[id] = cfg.get_value("xp", id, 0)
+				xp += int(cfg.get_value("xp", id, 0))
 		if cfg.has_section("level"):
 			for id in cfg.get_section_keys("level"):
 				character_level[id] = cfg.get_value("level", id, 1)

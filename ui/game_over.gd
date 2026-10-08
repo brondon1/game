@@ -19,9 +19,9 @@ func open(won: bool) -> void:
 	title.modulate = Color("facb3e") if won else Color("da4e38")
 	var ch := GameState.character
 	var upgrade_hint := "，回大厅找角色升级" if GameState.can_upgrade(ch) else ""
-	stats.text = "到达：第 %d 层\n击杀：%d\n金币：%d\n本局经验：+%d（%s 现有 %d 经验%s）\n\n最高纪录：第 %d 层 · 通关 %d 次" % [
-		GameState.current_floor, GameState.kills, GameState.coins, GameState.run_xp, ch.display_name,
-		GameState.xp_of(ch), upgrade_hint, GameState.best_floor, GameState.wins]
+	stats.text = "到达：第 %d 层\n击杀：%d\n金币：%d\n本局经验：+%d（现有 %d 经验，所有角色共用%s）\n\n最高纪录：第 %d 层 · 通关 %d 次" % [
+		GameState.current_floor, GameState.kills, GameState.coins, GameState.run_xp,
+		GameState.xp, upgrade_hint, GameState.best_floor, GameState.wins]
 	show()
 	get_tree().paused = true
 	retry_button.grab_focus()

@@ -206,8 +206,7 @@ func _show_well(shown: bool) -> void:
 
 
 func _well_text() -> String:
-	var ch := GameState.character
-	return "往井里扔一枚硬币，许个愿吧。\n金币 %d · %s的经验 %d（Lv.%d）" % [GameState.coins, ch.display_name, GameState.xp_of(ch), GameState.level_of(ch)]
+	return "往井里扔一枚硬币，许个愿吧。\n金币 %d · 经验 %d（所有角色共用）" % [GameState.coins, GameState.xp]
 
 
 func _well_buttons() -> Array:
@@ -218,28 +217,27 @@ func _well_buttons() -> Array:
 	]
 
 
-## 调整金币和当前角色的经验（不会低于 0），存档
+## 调整金币和经验（不会低于 0），存档
 func _wish(coins: int, xp: int) -> void:
-	var ch := GameState.character
 	GameState.coins = maxi(GameState.coins + coins, 0)
-	GameState.character_xp[GameState.character_id(ch)] = maxi(GameState.xp_of(ch) + xp, 0)
+	GameState.xp = maxi(GameState.xp + xp, 0)
 	_after_wish()
 
 
-## 金币补到 9999，经验补到够当前角色一路升到满级
+## 金币补到 9999，经验补到够所有角色一路升到满级
 func _wish_max() -> void:
-	var ch := GameState.character
 	var need := 0
-	for level in range(GameState.level_of(ch), GameState.MAX_LEVEL):
-		need += GameState.upgrade_cost(level)
+	for ch in GameState.characters:
+		for level in range(GameState.level_of(ch), GameState.MAX_LEVEL):
+			need += GameState.upgrade_cost(level)
 	GameState.coins = maxi(GameState.coins, 9999)
-	GameState.character_xp[GameState.character_id(ch)] = maxi(GameState.xp_of(ch), need)
+	GameState.xp = maxi(GameState.xp, need)
 	_after_wish()
 
 
 func _wish_clear() -> void:
 	GameState.coins = 0
-	GameState.character_xp[GameState.character_id(GameState.character)] = 0
+	GameState.xp = 0
 	_after_wish()
 
 
