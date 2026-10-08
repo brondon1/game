@@ -81,7 +81,7 @@ offset_right = 200.0
 offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "WASD 移动 · E 和角色对话、找商人交易 · 走进传送门出发"
+text = "WASD 移动 · E 和角色对话、找商人交易 · 走到最左边的门出发"
 horizontal_alignment = 1
 
 [node name="TouchControls" parent="UI" instance=ExtResource("5_touch")]
