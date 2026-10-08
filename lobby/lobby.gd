@@ -6,23 +6,56 @@ extends Node2D
 
 const TILE_SIZE := 16
 ## 大厅的地板范围（瓦片坐标）
-const ROOM := Rect2i(0, 0, 22, 12)
+const ROOM := Rect2i(0, 0, 22, 11)
 ## 传送门和玩家出生点（瓦片坐标）
 const PORTAL_CELL := Vector2i(11, 2)
-const MERCHANT_CELL := Vector2i(3, 10)
+const MERCHANT_CELL := Vector2i(3, 9)
 const MERCHANT_TEXTURE := preload("res://assets/sprites/merchant_idle.png")
-const START_CELL := Vector2i(11, 10)
-## 大厅不大，用一个固定的镜头一次看全（屏幕上方留出左上角信息栏的位置）
-const CAMERA_CENTER := Vector2(176, 78)
+const START_CELL := Vector2i(11, 9)
+## 大厅不大，用一个固定的镜头一次看全（包括上方三格高的墙）
+const CAMERA_CENTER := Vector2(176, 72)
 const NPC_SCENE := preload("res://lobby/lobby_npc.tscn")
 const PLAYER_SCENE := preload("res://player/player.tscn")
 const PORTAL_SCENE := preload("res://dungeon/portal.tscn")
 const TORCH_SCENE := preload("res://props/torch.tscn")
-## 角色站的位置（瓦片坐标），左边 3 个、右边 3 个
+## 角色站的位置（瓦片坐标），地毯左边 3 个、右边 3 个
 const NPC_CELLS: Array[Vector2i] = [
-	Vector2i(3, 5), Vector2i(5, 7), Vector2i(7, 5),
-	Vector2i(14, 5), Vector2i(16, 7), Vector2i(18, 5),
+	Vector2i(3, 4), Vector2i(5, 6), Vector2i(7, 4),
+	Vector2i(15, 4), Vector2i(17, 6), Vector2i(19, 4),
 ]
+
+# ---------- 家具 ----------
+# 大厅是"家"：木地板、贴墙纸的墙（比地牢多两格高：墙纸 + 顶上的线脚），再摆上家具。
+const HOME := "res://assets/sprites/home/"
+## 墙纸和墙顶线脚（home_tiles.png 第二行最后两格，地牢的瓦片里没有）
+const UPPER_WALL_TILE := Vector2i(11, 1)
+const CROWN_TILE := Vector2i(12, 1)
+## 挂在墙上的东西：[贴图, 中心位置（像素）, 左右翻转]
+const WALL_DECOR := [
+	["painting.png", Vector2(84, -26), false],
+	["window.png", Vector2(118, -28), false],
+	["window.png", Vector2(250, -28), false],
+	["painting.png", Vector2(284, -26), true],
+]
+## 立在地上的家具：[贴图, 底边中点（像素）, 挡路的碰撞框大小（为 0 就不挡路）]
+const FURNITURE := [
+	["bookshelf.png", Vector2(326, 6), Vector2(28, 10)],
+	["plant.png", Vector2(10, 8), Vector2(12, 6)],
+	["plant.png", Vector2(298, 6), Vector2(12, 6)],
+	["plant.png", Vector2(10, 174), Vector2(12, 6)],
+	["bed.png", Vector2(338, 176), Vector2(22, 30)],
+	["table.png", Vector2(272, 160), Vector2(30, 10)],
+	["chair_left.png", Vector2(250, 160), Vector2.ZERO],
+	["chair_right.png", Vector2(294, 160), Vector2.ZERO],
+	["barrel.png", Vector2(22, 146), Vector2(12, 6)],
+	["barrel.png", Vector2(30, 160), Vector2(12, 6)],
+]
+const FIREPLACE_POS := Vector2(42, 8)
+const RUG_CENTER := Vector2(184, 100)
+## 炉火和烛光是暖色，窗户透进来的是冷色的天光
+const FIRE_LIGHT := Color(1, 0.62, 0.32)
+const CANDLE_LIGHT := Color(1, 0.8, 0.5)
+const WINDOW_LIGHT := Color(0.62, 0.78, 1)
 
 var _npcs: Array[LobbyNpc] = []
 ## 正在对话的角色，和这个角色已经说到第几句
@@ -80,19 +113,92 @@ func _cell_center(cell: Vector2i) -> Vector2:
 	return Vector2(cell * TILE_SIZE) + Vector2.ONE * TILE_SIZE * 0.5
 
 
-## 铺地板和墙，上方墙面挂火把（传送门正上方空出来）
+## 铺地板和墙：TilePainter 铺好一圈墙后，把上方的墙加高成"护墙板 + 墙纸 + 线脚"三层，
+## 左右两边的侧墙也跟着加高，最后摆家具。
 func _build_room() -> void:
 	var floor_cells := {}
 	for x in range(ROOM.position.x, ROOM.end.x):
 		for y in range(ROOM.position.y, ROOM.end.y):
 			floor_cells[Vector2i(x, y)] = true
 	TilePainter.paint(tile_map, floor_cells, TilePainter.walls_around(floor_cells))
-	for x in range(ROOM.position.x + 2, ROOM.end.x - 1, 4):
-		if absi(x - PORTAL_CELL.x) <= 2:
-			continue
-		var torch: Torch = TORCH_SCENE.instantiate()
-		torch.position = Vector2(Vector2i(x, ROOM.position.y - 1) * TILE_SIZE) + Vector2(TILE_SIZE * 0.5, TILE_SIZE * 0.6)
-		decor_root.add_child(torch)
+	var top := ROOM.position.y
+	for x in range(ROOM.position.x, ROOM.end.x):
+		tile_map.set_cell(Vector2i(x, top - 2), 0, UPPER_WALL_TILE)
+		tile_map.set_cell(Vector2i(x, top - 3), 0, CROWN_TILE)
+	for y in range(top - 3, ROOM.end.y):
+		tile_map.set_cell(Vector2i(ROOM.position.x - 1, y), 0, TilePainter.WALL_SIDE_LEFT_TILE)
+		tile_map.set_cell(Vector2i(ROOM.end.x, y), 0, TilePainter.WALL_SIDE_RIGHT_TILE)
+	for x in range(ROOM.position.x - 1, ROOM.end.x + 1):
+		tile_map.set_cell(Vector2i(x, top - 4), 0, TilePainter.WALL_TOP_TILE)
+		tile_map.set_cell(Vector2i(x, ROOM.end.y), 0, TilePainter.WALL_TOP_TILE)
+	_furnish()
+
+
+func _furnish() -> void:
+	var rug := Sprite2D.new()
+	rug.texture = load(HOME + "rug.png")
+	rug.position = RUG_CENTER
+	decor_root.add_child(rug)
+	for item: Array in WALL_DECOR:
+		var sprite := Sprite2D.new()
+		sprite.texture = load(HOME + item[0])
+		sprite.position = item[1]
+		sprite.flip_h = item[2]
+		decor_root.add_child(sprite)
+		if item[0] == "window.png":
+			_add_light(decor_root, item[1] + Vector2(0, 34), WINDOW_LIGHT, 0.25, 1.1)
+	for item: Array in FURNITURE:
+		_add_furniture(item[0], item[1], item[2])
+	# 壁炉：炉膛里是会跳动的火（借用火把的闪烁逻辑），照亮左上角
+	var fireplace := _add_furniture("fireplace.png", FIREPLACE_POS, Vector2(34, 10))
+	var fire: Torch = TORCH_SCENE.instantiate()
+	fire.base_energy = 1.2
+	fire.base_scale = 2.4
+	fire.position = Vector2(0, -8)
+	fireplace.add_child(fire)
+	var fire_sprite: Sprite2D = fire.get_node("Sprite2D")
+	fire_sprite.texture = load(HOME + "fire.png")
+	fire.get_node("PointLight2D").color = FIRE_LIGHT
+	# 桌上的蜡烛
+	var table := entities.get_children().filter(func(n: Node) -> bool: return n.name == "Table").front() as Node2D
+	var candle := Sprite2D.new()
+	candle.texture = load(HOME + "candle.png")
+	candle.material = preload("res://common/unshaded.tres")
+	candle.position = Vector2(4, -22)
+	table.add_child(candle)
+	_add_light(candle, Vector2(0, -3), CANDLE_LIGHT, 0.8, 0.9)
+
+
+## 立在地上的家具：贴图的底边对齐 base（参与 Y 排序，角色能走到它前面或后面），
+## 底部有一块挡路的碰撞框。
+func _add_furniture(file: String, base: Vector2, solid: Vector2) -> Node2D:
+	var body := StaticBody2D.new()
+	body.name = file.get_basename().to_pascal_case()
+	body.position = base
+	body.collision_mask = 0
+	var sprite := Sprite2D.new()
+	sprite.texture = load(HOME + file)
+	sprite.offset = Vector2(0, -sprite.texture.get_height() * 0.5)
+	body.add_child(sprite)
+	if solid != Vector2.ZERO:
+		var shape := CollisionShape2D.new()
+		var rect := RectangleShape2D.new()
+		rect.size = solid
+		shape.shape = rect
+		shape.position = Vector2(0, -solid.y * 0.5)
+		body.add_child(shape)
+	entities.add_child(body)
+	return body
+
+
+func _add_light(parent: Node, pos: Vector2, color: Color, energy: float, scale: float) -> void:
+	var light := PointLight2D.new()
+	light.texture = preload("res://common/light_texture.tres")
+	light.position = pos
+	light.color = color
+	light.energy = energy
+	light.texture_scale = scale
+	parent.add_child(light)
 
 
 ## 当前角色不站在人群里（玩家就是他）；左上角显示当前角色的等级、经验和金币

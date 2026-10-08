@@ -1,7 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://lobby/lobby.gd" id="1_script"]
-[ext_resource type="TileSet" path="res://dungeon/tileset.tres" id="2_tileset"]
+[ext_resource type="TileSet" path="res://dungeon/home_tileset.tres" id="2_tileset"]
 [ext_resource type="PackedScene" path="res://player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://ui/lobby_dialog.tscn" id="4_dialog"]
 [ext_resource type="PackedScene" path="res://ui/touch_controls.tscn" id="5_touch"]
@@ -10,8 +10,8 @@
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("6_vignette")
-shader_parameter/strength = 0.6
-shader_parameter/tint = Color(0.03, 0.02, 0.07, 1)
+shader_parameter/strength = 0.5
+shader_parameter/tint = Color(0.08, 0.04, 0.02, 1)
 
 [node name="Lobby" type="Node2D"]
 script = ExtResource("1_script")
@@ -22,16 +22,16 @@ tile_set = ExtResource("2_tileset")
 [node name="Decor" type="Node2D" parent="."]
 
 [node name="Ambient" type="CanvasModulate" parent="."]
-color = Color(0.8, 0.76, 0.76, 1)
+color = Color(0.86, 0.78, 0.68, 1)
 
 [node name="Camera2D" type="Camera2D" parent="."]
 
 [node name="Sign" type="Label" parent="."]
 z_index = 2
-offset_left = 96.0
-offset_top = -26.0
-offset_right = 256.0
-offset_bottom = 6.0
+offset_left = 104.0
+offset_top = -44.0
+offset_right = 264.0
+offset_bottom = -12.0
 theme_override_colors/font_color = Color(0.98, 0.796, 0.243, 1)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2

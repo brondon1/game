@@ -3,6 +3,7 @@ extends Node2D
 ## 墙上的火把：两帧火苗交替，光的亮度和大小随机抖动。
 
 @export var base_energy := 1.0
+@export var base_scale := 1.6
 
 var _time := 0.0
 
@@ -19,4 +20,4 @@ func _process(delta: float) -> void:
 	sprite.frame = int(_time * 7.0) % 2
 	var flicker := sin(_time * 11.0) * 0.06 + sin(_time * 23.0) * 0.04 + randf_range(-0.03, 0.03)
 	light.energy = base_energy + flicker
-	light.texture_scale = 1.6 + flicker * 0.5
+	light.texture_scale = base_scale + flicker * 0.5
