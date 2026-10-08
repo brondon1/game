@@ -15,3 +15,4 @@ max_energy = 200
 speed = 110.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
+lines = PackedStringArray("翻滚的时候是无敌的，别怕往弹幕里冲。", "我喜欢追踪弩，箭会自己拐弯。", "听说熔岩深渊里的恶魔会放一整圈子弹。", "能量每秒都会慢慢回来，手枪丢了也不怕。")

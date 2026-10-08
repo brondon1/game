@@ -12,7 +12,7 @@ config_version=5
 
 config/name="像素地牢"
 config/description="一个类似元气骑士的 2D 俯视角 Roguelike 地牢射击游戏骨架。"
-run/main_scene="res://ui/main_menu.tscn"
+run/main_scene="res://lobby/lobby.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://assets/sprites/icon.png"
 

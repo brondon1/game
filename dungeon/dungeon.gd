@@ -4,23 +4,6 @@ extends Node2D
 const TILE_SIZE := 16
 ## 每个房间格子占多少瓦片（房间本身 + 走廊的空间）
 const CELL_TILES := Vector2i(26, 20)
-# tiles.png 里各种瓦片的位置（贴图来自 0x72 素材包）：
-# 第一行：8 种地板 + 墙根阴影；第二行：墙面（普通 / 4 色旗帜 / 2 种破洞）、墙顶、左侧墙、右侧墙、虚空
-const FLOOR_TILES: Array[Vector2i] = [
-	Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0),
-	Vector2i(4, 0), Vector2i(5, 0), Vector2i(6, 0), Vector2i(7, 0),
-]
-const FLOOR_WEIGHTS: Array[float] = [40.0, 3.0, 3.0, 3.0, 2.0, 2.0, 2.0, 2.0]
-const FLOOR_SHADOW_TILE := Vector2i(8, 0)
-const WALL_FACE_TILES: Array[Vector2i] = [
-	Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1),
-	Vector2i(4, 1), Vector2i(5, 1), Vector2i(6, 1),
-]
-const WALL_FACE_WEIGHTS: Array[float] = [40.0, 1.0, 1.0, 1.0, 1.0, 1.5, 1.5]
-const WALL_TOP_TILE := Vector2i(7, 1)
-const WALL_SIDE_LEFT_TILE := Vector2i(8, 1)
-const WALL_SIDE_RIGHT_TILE := Vector2i(9, 1)
-const VOID_TILE := Vector2i(10, 1)
 ## 地面装饰（不挡路），出现的概率
 const DECOR_TEXTURES: Array[Texture2D] = [preload("res://assets/sprites/decor_skull.png")]
 const DECOR_CHANCE := 0.012
@@ -32,31 +15,6 @@ const DOOR_SCENE := preload("res://dungeon/door.tscn")
 const PORTAL_SCENE := preload("res://dungeon/portal.tscn")
 const CRATE_SCENE := preload("res://props/crate.tscn")
 const TORCH_SCENE := preload("res://props/torch.tscn")
-## 铺瓦片，形成 2.5D 的纵深感：
-## - 下方是地板的墙 → 砖墙正面（偶尔有旗帜、破洞）
-## - 上方是地板、或者下方是砖墙正面的墙 → 墙顶
-## - 左右挨着地板的墙 → 侧墙；其余 → 虚空
-## 墙面正下方的地板用带阴影的瓦片，其余地板随机选花纹。
-func _paint_tiles(floor_cells: Dictionary, wall_cells: Dictionary) -> void:
-	var rng := RandomNumberGenerator.new()
-	for c: Vector2i in wall_cells:
-		var tile := VOID_TILE
-		if floor_cells.has(c + Vector2i.DOWN):
-			tile = WALL_FACE_TILES[rng.rand_weighted(WALL_FACE_WEIGHTS)]
-		elif floor_cells.has(c + Vector2i.UP) or floor_cells.has(c + Vector2i(0, 2)):
-			tile = WALL_TOP_TILE
-		elif floor_cells.has(c + Vector2i.RIGHT):
-			tile = WALL_SIDE_LEFT_TILE
-		elif floor_cells.has(c + Vector2i.LEFT):
-			tile = WALL_SIDE_RIGHT_TILE
-		tile_map.set_cell(c, 0, tile)
-	for c: Vector2i in floor_cells:
-		if wall_cells.has(c + Vector2i.UP):
-			tile_map.set_cell(c, 0, FLOOR_SHADOW_TILE)
-		else:
-			tile_map.set_cell(c, 0, FLOOR_TILES[rng.rand_weighted(FLOOR_WEIGHTS)])
-
-
 ## 在地板上随机撒一些骨头、杂草、碎石之类的装饰（纯视觉，不挡路）。
 func _place_decor(floor_cells: Dictionary, obstacles: Dictionary) -> void:
 	var blocked := {}
@@ -145,17 +103,11 @@ func _build(layout: Dictionary) -> void:
 			floor_cells.erase(p)
 
 	# 4. 所有紧挨地板（含斜角）但本身不是地板的格子都是墙（包括石柱）
-	var wall_cells := {}
+	var wall_cells := TilePainter.walls_around(floor_cells)
 	for cell: Vector2i in obstacles:
 		for p: Vector2i in obstacles[cell].pillars:
 			wall_cells[p] = true # 石墩中间的格子不挨着地板，要单独标记
-	for c: Vector2i in floor_cells:
-		for dx in range(-1, 2):
-			for dy in range(-1, 2):
-				var n := c + Vector2i(dx, dy)
-				if not floor_cells.has(n):
-					wall_cells[n] = true
-	_paint_tiles(floor_cells, wall_cells)
+	TilePainter.paint(tile_map, floor_cells, wall_cells)
 	_place_decor(floor_cells, obstacles)
 	_place_torches(room_rects, wall_cells, floor_cells)
 
@@ -260,11 +212,11 @@ func _on_room_cleared(room: Room) -> void:
 	if room.type == Room.Type.BOSS:
 		_spawn_portal.call_deferred(room.rect.get_center())
 		hud.show_message("传送门已开启")
-		# 通过这一层：角色获得经验（回主菜单花经验升级，局内不会自动升级）
+		# 通过这一层：角色获得经验（回大厅找角色花经验升级，局内不会自动升级）
 		var gained := GameState.grant_floor_xp()
 		hud.show_message("经验 +%d" % gained, true)
 		if GameState.can_upgrade(GameState.character):
-			hud.show_message("经验够了，回主菜单可以升级", true)
+			hud.show_message("经验够了，回大厅找角色升级", true)
 
 
 func _spawn_portal(pos: Vector2) -> void:

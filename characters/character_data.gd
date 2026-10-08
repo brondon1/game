@@ -17,6 +17,8 @@ const WALK_FRAMES := 4
 @export var skill_scene: PackedScene
 ## 贴图横向一共几帧（只有一帧的贴图填 1）
 @export var hframes := 8
+## 在大厅里和这个角色聊天时说的话（每次聊天换下一句）
+@export var lines: PackedStringArray = []
 
 
 ## 菜单里用的头像：动画的第一帧

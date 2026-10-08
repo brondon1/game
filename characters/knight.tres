@@ -15,3 +15,4 @@ max_energy = 180
 speed = 95.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
+lines = PackedStringArray("又是新的一天，地牢里的怪物可不会自己消失。", "盾牌只有一格？多打几层攒经验，回来升级就厚了。", "双持的时候，记得手里拿两把好枪。", "食人魔跳起来之前，地上会先出现红圈，看到就跑！")

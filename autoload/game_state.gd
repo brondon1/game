@@ -36,7 +36,7 @@ const ITEMS := {
 ## 限时药剂的持续时间（秒）
 const BOOST_TIME := 30.0
 
-## 角色等级：每个角色单独升级。在地牢里每通过一层获得经验（越深越多），回到主菜单花经验升级，
+## 角色等级：每个角色单独升级。在地牢里每通过一层获得经验（越深越多），回到大厅和角色对话、花经验升级，
 ## 永久提升角色的初始属性（只对新开的一局生效）。LEVEL_REWARDS 的第 i 项是升到第 i + 2 级时的奖励。
 ## 只有骑士有护盾，其他角色的"初始护盾 +1"换成"初始生命 +1"（见 reward_stat()）。
 const MAX_LEVEL := 10
@@ -47,7 +47,7 @@ const LEVEL_REWARDS := [
 ]
 const REWARD_NAMES := {"shield": "初始护盾", "hp": "初始生命", "energy": "初始能量"}
 
-## 主菜单里可选的角色。新增角色：新建一个 CharacterData 资源，把路径加进来。
+## 可选的角色（都站在大厅里）。新增角色：新建一个 CharacterData 资源，把路径加进来。
 ## （角色 → 技能脚本 → 又会用到 GameState，所以这里不能 preload，在 _ready 里再加载）
 const CHARACTER_PATHS: Array[String] = [
 	"res://characters/knight.tres",
@@ -326,6 +326,15 @@ func apply_buff(id: String) -> void:
 	stats_changed.emit()
 
 
+# ---------- 角色 ----------
+
+## 选择要用的角色（在大厅里和角色对话时选），会存档，下次打开游戏还是它。
+func select_character(ch: CharacterData) -> void:
+	character = ch
+	new_run()
+	_save()
+
+
 # ---------- 角色等级 ----------
 
 static func character_id(ch: CharacterData) -> String:
@@ -359,7 +368,7 @@ func next_reward_text(ch: CharacterData) -> String:
 	return "%s +%d" % [REWARD_NAMES[reward_stat(ch, level - 1)], LEVEL_REWARDS[level - 1][1]]
 
 
-## 在主菜单花经验升一级（只改初始属性，下一局开始生效）。经验不够或满级时返回 false。
+## 在大厅花经验升一级（只改初始属性，下一局开始生效）。经验不够或满级时返回 false。
 func upgrade(ch: CharacterData) -> bool:
 	if not can_upgrade(ch):
 		return false
@@ -394,7 +403,7 @@ func floor_xp(floor_number: int) -> int:
 	return 15 + 10 * floor_number
 
 
-## 通过当前这一层：给当前角色加经验并存档（回主菜单再花经验升级），返回获得的经验。
+## 通过当前这一层：给当前角色加经验并存档（回大厅再花经验升级），返回获得的经验。
 func grant_floor_xp() -> int:
 	var gained := floor_xp(current_floor)
 	character_xp[character_id(character)] = xp_of(character) + gained

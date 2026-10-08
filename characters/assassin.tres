@@ -15,3 +15,4 @@ max_energy = 160
 speed = 118.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
+lines = PackedStringArray("影袭会直接冲到最近的敌人身边，看准了再出手。", "匕首虽短，出手可快。", "嘘……僵尸王会召唤小僵尸，先把小的清掉。", "最好的刺客，是没人看见的刺客。")

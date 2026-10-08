@@ -13,6 +13,9 @@ static var force := false
 ## 摇杆头最多能推多远（像素）
 const STICK_RADIUS := 16.0
 const DEAD_ZONE := 0.2
+## 是否显示右上角的暂停按钮和小地图按钮（大厅里没有这两样）
+@export var show_top_buttons := true
+
 ## 屏幕左边多宽的区域可以按出摇杆（占屏幕宽度的比例）
 const STICK_AREA := 0.45
 const MOVE_ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"move_up", &"move_down"]
@@ -36,17 +39,18 @@ func _ready() -> void:
 	set_process_input(active)
 	if not active:
 		return
+	$TopRight.visible = show_top_buttons
 	GameState.weapons_changed.connect(_refresh_weapon)
 	_refresh_weapon()
 	_reset_stick.call_deferred() # 等布局算出尺寸后再放到默认位置
 
 
 func _process(_delta: float) -> void:
-	if _player == null:
+	if not is_instance_valid(_player): # 大厅里换角色时玩家节点会换掉
 		_player = get_tree().get_first_node_in_group("player") as Player
-	interact_button.visible = _player != null and _player.can_interact()
+	interact_button.visible = is_instance_valid(_player) and _player.can_interact()
 	swap_button.visible = GameState.weapons.size() > 1
-	if _player and _player.skill:
+	if is_instance_valid(_player) and _player.skill:
 		var skill := _player.skill
 		if skill.is_active():
 			skill_button.modulate = Color("72d6ce")

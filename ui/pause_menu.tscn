@@ -84,7 +84,7 @@ text = "继续游戏"
 [node name="MainMenuButton" type="Button" parent="Center/Panel/VBox"]
 unique_name_in_owner = true
 layout_mode = 2
-text = "回到主菜单"
+text = "回到大厅"
 
 [node name="Controls" type="Label" parent="Center/Panel/VBox"]
 unique_name_in_owner = true

@@ -1,6 +1,6 @@
 class_name Portal
 extends Area2D
-## 传送门：打败 Boss 后出现，玩家走进去就进入下一层。
+## 传送门：打败 Boss 后出现，玩家走进去就进入下一层；大厅里走进去选择开始游戏或退出。
 
 signal player_entered
 
@@ -19,6 +19,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_time += delta
 	sprite.frame = int(_time * 8.0) % 4 # 换帧转动，像素不会被旋转拉歪
+
+
+## 重新生效：玩家走出去再走进来会再次触发（大厅里选"再逛逛"后用）
+func reset() -> void:
+	_used = false
 
 
 func _on_body_entered(body: Node2D) -> void:

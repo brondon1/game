@@ -15,3 +15,4 @@ max_energy = 140
 speed = 100.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
+lines = PackedStringArray("狂暴的时候，没有什么能挡住我！", "大铁锤一锤一个，就是慢了点。", "血厚才是硬道理。", "战斧能横扫半圈，被围住的时候最好用。")

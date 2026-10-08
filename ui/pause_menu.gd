@@ -54,4 +54,4 @@ func _resume() -> void:
 func _to_main_menu() -> void:
 	Sound.save_settings()
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://lobby/lobby.tscn")

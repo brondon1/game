@@ -15,3 +15,4 @@ max_energy = 260
 speed = 100.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
+lines = PackedStringArray("能量就是我的命。好在它会自己慢慢回来。", "元素新星能清掉身边的子弹，危险的时候再放。", "剧毒法杖的毒能穿过好几个敌人。", "冰封墓穴里冷得很，我的胡子都结霜了。")

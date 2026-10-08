@@ -1,7 +1,7 @@
 class_name Player
 extends CharacterBody2D
 ## 玩家：移动、自动瞄准、射击、拾取和切换武器、释放角色技能，受伤时先扣护盾再扣生命。
-## 外观、速度和技能由 GameState.character（主菜单选的角色）决定。
+## 外观、速度和技能由 GameState.character（在大厅里选的角色）决定。
 
 ## 自动瞄准视线内最近的敌人（类似元气骑士手机版）。没有敌人时朝鼠标方向瞄准。
 @export var auto_aim := true
