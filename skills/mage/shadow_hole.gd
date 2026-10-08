@@ -10,5 +10,8 @@ func _init() -> void:
 func _activate() -> void:
 	var spot := reach_point(player.global_position, player.aim_direction, 70.0, 12.0)
 	var hole := zone(spot, 60.0, 2.0, SkillZone.Kind.PULL)
-	hole.tree_exiting.connect(func() -> void:
-		Explosion.spawn(hole.get_parent(), spot, 44.0, dmg(14), Bullet.Team.PLAYER))
+	var entities := world()
+	var damage := dmg(14)
+	hole.expired.connect(func() -> void:
+		if is_instance_valid(entities):
+			Explosion.spawn(entities, spot, 44.0, damage, Bullet.Team.PLAYER))

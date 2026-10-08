@@ -7,6 +7,9 @@ extends Node2D
 
 enum Kind { BURN, POISON, FROST, HEAL, TIME, PULL, SHIELD }
 
+## 时间到了、开始消失时发出（黑洞在这时炸开）
+signal expired
+
 const COLORS := {
 	Kind.BURN: Color(0.93, 0.45, 0.18), Kind.POISON: Color(0.45, 0.75, 0.25), Kind.FROST: Color(0.7, 0.9, 1.0),
 	Kind.HEAL: Color(0.35, 0.75, 0.95), Kind.TIME: Color(0.55, 0.5, 1.0), Kind.PULL: Color(0.35, 0.15, 0.45),
@@ -28,8 +31,25 @@ var _age := 0.0
 var _slowed: Array[Bullet] = []
 
 
+## 地面区域要画在地板之上、角色之下：放进场景里的 Decor 层（地牢和大厅都有），没有的话就放在 entities 里
+static func ground_layer(entities: Node) -> Node:
+	var decor := entities.get_parent().get_node_or_null("Decor")
+	return decor if decor else entities
+
+
+## 在 pos 生成一片区域
+static func spawn(entities: Node, pos: Vector2, p_radius: float, time: float, p_kind: Kind, p_amount := 1) -> SkillZone:
+	var z := SkillZone.new()
+	z.radius = p_radius
+	z.lifetime = time
+	z.kind = p_kind
+	z.amount = p_amount
+	ground_layer(entities).add_child(z)
+	z.global_position = pos
+	return z
+
+
 func _ready() -> void:
-	z_index = -1 # 画在角色脚下
 	modulate.a = 0.0
 	create_tween().tween_property(self, "modulate:a", 1.0, 0.2)
 
@@ -121,6 +141,7 @@ func _enemies_inside() -> Array[Enemy]:
 
 
 func _finish() -> void:
+	expired.emit()
 	for bullet in _slowed:
 		if is_instance_valid(bullet):
 			bullet.speed_scale = 1.0

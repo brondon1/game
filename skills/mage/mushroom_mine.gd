@@ -51,11 +51,5 @@ func _burst() -> void:
 	if not leaves_poison:
 		queue_free()
 		return
-	var cloud := SkillZone.new()
-	cloud.kind = SkillZone.Kind.POISON
-	cloud.radius = 30.0
-	cloud.lifetime = 3.0
-	cloud.amount = 2
-	cloud.position = global_position
-	get_parent().add_child(cloud)
+	SkillZone.spawn(get_parent(), global_position, 30.0, 4.0, SkillZone.Kind.POISON, 2)
 	queue_free()

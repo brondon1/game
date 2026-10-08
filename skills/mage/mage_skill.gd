@@ -85,14 +85,7 @@ func hurt_area(pos: Vector2, radius: float, amount: int, push := 0.6) -> int:
 
 ## 生成一个地面效果区域（见 SkillZone）
 func zone(pos: Vector2, radius: float, time: float, kind: SkillZone.Kind, amount := 1) -> SkillZone:
-	var z := SkillZone.new()
-	z.radius = radius
-	z.lifetime = time
-	z.kind = kind
-	z.amount = amount
-	z.position = pos
-	world().add_child(z)
-	return z
+	return SkillZone.spawn(world(), pos, radius, time, kind, amount)
 
 
 ## 贴图精灵（特效用），自动挂到 parent 下
