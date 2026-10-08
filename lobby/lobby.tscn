@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://ui/touch_controls.tscn" id="5_touch"]
 [ext_resource type="Shader" path="res://common/vignette.gdshader" id="6_vignette"]
 [ext_resource type="PackedScene" path="res://ui/merchant_shop.tscn" id="7_shop"]
+[ext_resource type="PackedScene" path="res://ui/skill_picker.tscn" id="8_picker"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("6_vignette")
@@ -90,3 +91,5 @@ show_top_buttons = false
 [node name="LobbyDialog" parent="." instance=ExtResource("4_dialog")]
 
 [node name="MerchantShop" parent="." instance=ExtResource("7_shop")]
+
+[node name="SkillPicker" parent="." instance=ExtResource("8_picker")]

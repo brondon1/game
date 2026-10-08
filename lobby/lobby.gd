@@ -41,6 +41,9 @@ const WALL_DECOR := [
 	["window.png", Vector2(250, -28), false],
 	["painting.png", Vector2(284, -26), true],
 ]
+## 隐藏的许愿池：藏在左边墙角，走到这么近才显出来；能调整金币和经验
+const WELL_POS := Vector2(16, 122)
+const WELL_REVEAL_DISTANCE := 30.0
 ## 书架（也是切换法师流派的地方）
 const SHELF_POS := Vector2(326, 6)
 ## 立在地上的家具：[贴图, 底边中点（像素）, 挡路的碰撞框大小（为 0 就不挡路）]
@@ -71,6 +74,8 @@ var _portal: Portal
 var _door: Sprite2D
 ## 传送门现在是否露出来（门是否开着）
 var _portal_open := false
+var _well: LobbyNpc
+var _well_shown := false
 
 @onready var tile_map: TileMapLayer = $TileMapLayer
 @onready var decor_root: Node2D = $Decor
@@ -78,6 +83,7 @@ var _portal_open := false
 @onready var player: Player = $Entities/Player
 @onready var dialog: LobbyDialog = $LobbyDialog
 @onready var shop: MerchantShop = $MerchantShop
+@onready var skill_picker: SkillPicker = $SkillPicker
 @onready var info: Label = %Info
 @onready var hint: Label = %Hint
 @onready var camera: Camera2D = $Camera2D
@@ -103,8 +109,10 @@ func _ready() -> void:
 	merchant.talked.connect(func(_npc: LobbyNpc) -> void: shop.open())
 	entities.add_child(merchant)
 	_add_spellbook_shelf()
+	_add_wishing_well()
 	shop.restock()
 	shop.closed.connect(_refresh)
+	skill_picker.closed.connect(_on_picker_closed)
 	_door = Sprite2D.new()
 	_door.texture = load(HOME + "door.png")
 	_door.hframes = 2
@@ -132,6 +140,9 @@ func _process(_delta: float) -> void:
 	var near := is_instance_valid(player) and player.global_position.distance_to(PORTAL_POS) < PORTAL_REVEAL_DISTANCE
 	if near != _portal_open:
 		_set_portal_open(near)
+	var near_well := is_instance_valid(player) and player.global_position.distance_to(WELL_POS) < WELL_REVEAL_DISTANCE
+	if near_well != _well_shown:
+		_show_well(near_well)
 
 
 ## 走近：门打开，传送门弹出来；走远：传送门收起来，门关上
@@ -149,8 +160,8 @@ func _set_portal_open(opened: bool) -> void:
 		_portal.reset()
 
 
-## 书架上放着技能书：正在用的角色能换技能的话（法师、女巫……）在这里换（人群里没有自己可以对话），
-## 否则打开法师的流派和技能
+## 书架上放着技能书：正在用的角色能换技能的话（法师、女巫、机械师）直接打开它的技能面板
+## （人群里没有自己可以对话），否则打开法师的
 func _add_spellbook_shelf() -> void:
 	var shelf: LobbyNpc = NPC_SCENE.instantiate()
 	shelf.display_name = "技能书架"
@@ -160,11 +171,86 @@ func _add_spellbook_shelf() -> void:
 	shelf.position = SHELF_POS
 	shelf.talked.connect(func(_npc: LobbyNpc) -> void:
 		var own := GameState.has_skill_options(GameState.character)
-		var who: LobbyNpc = _npcs.filter(func(n: LobbyNpc) -> bool:
-			return n.character == GameState.character if own else GameState.is_mage(n.character)).front()
-		_on_npc_talked(who)
-		_show_skill())
+		var who: CharacterData = GameState.character if own else \
+			_npcs.filter(func(n: LobbyNpc) -> bool: return GameState.is_mage(n.character)).front().character
+		skill_picker.open(who))
 	entities.add_child(shelf)
+
+
+# ---------- 隐藏的许愿池 ----------
+
+func _add_wishing_well() -> void:
+	_well = NPC_SCENE.instantiate()
+	_well.display_name = "许愿池"
+	_well.texture = load(HOME + "wishing_well.png")
+	_well.hframes = 2
+	_well.action = "许愿"
+	_well.position = WELL_POS
+	_well.talked.connect(func(_npc: LobbyNpc) -> void:
+		dialog.open("许愿池", _well_text(), _well.icon_texture(), _well_buttons()))
+	entities.add_child(_well)
+	_well.visible = false
+	_well.monitoring = false
+
+
+## 走到墙角：许愿池闪一下出现；走开：隐去
+func _show_well(shown: bool) -> void:
+	_well_shown = shown
+	_well.visible = shown
+	_well.set_deferred("monitoring", shown)
+	if shown:
+		_well.modulate.a = 0.0
+		_well.create_tween().tween_property(_well, "modulate:a", 1.0, 0.3)
+		HitEffect.spawn(entities, WELL_POS + Vector2(0, -8), Color("facb3e"), 12, 1.0)
+		Sound.play(Sound.COIN, -4.0)
+
+
+func _well_text() -> String:
+	var ch := GameState.character
+	return "往井里扔一枚硬币，许个愿吧。\n金币 %d · %s的经验 %d（Lv.%d）" % [GameState.coins, ch.display_name, GameState.xp_of(ch), GameState.level_of(ch)]
+
+
+func _well_buttons() -> Array:
+	return [
+		["金币 +100", _wish.bind(100, 0)], ["金币 -100", _wish.bind(-100, 0)],
+		["经验 +100", _wish.bind(0, 100)], ["经验 -100", _wish.bind(0, -100)],
+		["一键补满", _wish_max], ["清零", _wish_clear], ["离开", dialog.close],
+	]
+
+
+## 调整金币和当前角色的经验（不会低于 0），存档
+func _wish(coins: int, xp: int) -> void:
+	var ch := GameState.character
+	GameState.coins = maxi(GameState.coins + coins, 0)
+	GameState.character_xp[GameState.character_id(ch)] = maxi(GameState.xp_of(ch) + xp, 0)
+	_after_wish()
+
+
+## 金币补到 9999，经验补到够当前角色一路升到满级
+func _wish_max() -> void:
+	var ch := GameState.character
+	var need := 0
+	for level in range(GameState.level_of(ch), GameState.MAX_LEVEL):
+		need += GameState.upgrade_cost(level)
+	GameState.coins = maxi(GameState.coins, 9999)
+	GameState.character_xp[GameState.character_id(ch)] = maxi(GameState.xp_of(ch), need)
+	_after_wish()
+
+
+func _wish_clear() -> void:
+	GameState.coins = 0
+	GameState.character_xp[GameState.character_id(GameState.character)] = 0
+	_after_wish()
+
+
+func _after_wish() -> void:
+	GameState.save_progress()
+	GameState.stats_changed.emit()
+	Sound.play(Sound.COIN, 0.0, 0.0)
+	HitEffect.spawn(entities, WELL_POS + Vector2(0, -10), Color("facb3e"), 8, 0.8)
+	dialog.set_body(_well_text())
+	dialog.set_buttons(_well_buttons())
+	_refresh()
 
 
 func _cell_center(cell: Vector2i) -> Vector2:
@@ -297,12 +383,8 @@ func _npc_buttons() -> Array:
 		var can := GameState.can_upgrade(ch)
 		buttons.append(["升级：%s（%s %d 经验）" % [GameState.next_reward_text(ch), "花费" if can else "需要",
 			GameState.upgrade_cost(level)], _upgrade, not can])
-	if GameState.is_mage(ch): # 法师：切换流派、换这个流派带的技能（一次只能带一个）
-		buttons.append(["流派：%s ▸" % MageBranches.branch_name(GameState.mage_branch), _next_branch])
-	if GameState.has_skill_options(ch): # 有多个技能可选的角色：一次只能带一个
-		var index := GameState.mage_skill_index() if GameState.is_mage(ch) else GameState.skill_choice(ch)
-		var count := MageBranches.skill_count(GameState.mage_branch) if GameState.is_mage(ch) else ch.skill_options.size()
-		buttons.append(["技能：%s（%d/%d）▸" % [_skill_info(ch).name, index + 1, count], _next_skill])
+	if GameState.has_skill_options(ch): # 有多个技能可选的角色（法师还分流派）：打开技能选择面板
+		buttons.append(["更换技能", func() -> void: skill_picker.open(ch)])
 	buttons.append(["选这个角色", _select])
 	buttons.append(["离开", dialog.close])
 	return buttons
@@ -326,29 +408,25 @@ func _show_skill() -> void:
 	dialog.set_buttons(_npc_buttons())
 
 
-func _next_branch() -> void:
-	var i := (MageBranches.index_of(GameState.mage_branch) + 1) % MageBranches.BRANCHES.size()
-	GameState.set_mage_branch(MageBranches.BRANCHES[i][0])
-	_mage_changed()
-
-
-func _next_skill() -> void:
-	var ch := _talking.character
-	if GameState.is_mage(ch):
-		GameState.set_mage_skill((GameState.mage_skill_index() + 1) % MageBranches.skill_count(GameState.mage_branch))
+## 技能面板关上：换过技能的话，角色的外观（法师按流派）、（正在用这个角色的话）玩家的外观和技能都跟着换。
+## 从对话框里打开的回到对话框，从书架直接打开的就结束暂停。
+func _on_picker_closed(changed: bool) -> void:
+	var ch := skill_picker.character
+	if changed:
+		for npc in _npcs:
+			if npc.character == ch:
+				npc.refresh_look()
+		if ch == GameState.character:
+			_respawn_player(player.global_position)
+	if dialog.visible:
+		dialog.portrait.texture = ch.icon()
+		if changed:
+			_show_skill()
+		else:
+			dialog.set_buttons(_npc_buttons())
 	else:
-		GameState.set_skill_choice(ch, (GameState.skill_choice(ch) + 1) % ch.skill_options.size())
-	_mage_changed()
-
-
-## 换了流派或技能：对话框、角色的外观、（正在用这个角色的话）玩家的外观和技能都跟着换
-func _mage_changed() -> void:
-	Sound.play(Sound.CLICK, -4.0, 0.0)
-	_talking.refresh_look()
-	dialog.portrait.texture = _talking.character.icon()
-	_show_skill()
-	if _talking.character == GameState.character:
-		_respawn_player(player.global_position)
+		get_tree().paused = false
+		_refresh()
 
 
 func _chat() -> void:

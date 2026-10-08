@@ -40,6 +40,14 @@ func _ready() -> void:
 	body_exited.connect(_on_body_exited)
 
 
+## 第一帧当头像（许愿池这类没有 CharacterData 的东西用）
+func icon_texture() -> Texture2D:
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = Rect2(0, 0, texture.get_width() / float(hframes), texture.get_height())
+	return atlas
+
+
 ## 角色换了外观（法师换流派）后刷新贴图
 func refresh_look() -> void:
 	texture = character.look()
@@ -50,6 +58,8 @@ func _process(delta: float) -> void:
 	_time += delta
 	if sprite.hframes >= 4:
 		sprite.frame = int(_time * 6.0) % 4 # 待机 4 帧（角色的动画条前 4 帧是待机）
+	elif sprite.hframes == 2:
+		sprite.frame = int(_time * 3.0) % 2 # 许愿池的水面一闪一闪
 	if is_instance_valid(_player):
 		sprite.flip_h = _player.global_position.x < global_position.x
 
