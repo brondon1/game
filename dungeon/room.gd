@@ -8,7 +8,7 @@ enum State { IDLE, FIGHTING, CLEARED }
 
 const SLIME_SCENE := preload("res://enemies/slime.tscn")
 const GUNNER_SCENE := preload("res://enemies/gunner.tscn")
-## 各层的 Boss 按顺序轮换：食人魔 → 僵尸王 → 地牢恶魔，第 4 层起再来一遍强化版
+## 每层的 Boss 从这几个里随机挑（不和上一层重复），章节越往后 Boss 的阶数越高、技能和弹幕越难
 const BOSS_SCENES: Array[PackedScene] = [
 	preload("res://enemies/ogre.tscn"),
 	preload("res://enemies/zombie_king.tscn"),
@@ -103,7 +103,7 @@ func _on_trigger_body_entered(body: Node2D) -> void:
 	if type == Type.BOSS:
 		_waves_left = 1
 	else:
-		_waves_left = 2 if GameState.current_floor == 1 else 3
+		_waves_left = GameState.waves_per_room()
 	for door in doors:
 		door.set_closed(true)
 	Sound.play(Sound.DOOR)
@@ -116,7 +116,7 @@ func _spawn_wave() -> void:
 	_waves_left -= 1
 	var wave: Array[PackedScene] = _random_wave()
 	if type == Type.BOSS:
-		wave.assign([BOSS_SCENES[(GameState.current_floor - 1) % BOSS_SCENES.size()]])
+		wave.assign([BOSS_SCENES[GameState.pick_boss(BOSS_SCENES.size())]])
 	for scene in wave:
 		var enemy: Enemy = scene.instantiate()
 		enemy.position = rect.get_center() if type == Type.BOSS else _random_spawn_point()
@@ -135,7 +135,7 @@ func _random_wave() -> Array[PackedScene]:
 		if GameState.current_floor >= entry[1]:
 			scenes.append(entry[0])
 			weights.append(entry[2])
-	var count := mini(2 + GameState.current_floor, 6) + randi_range(0, 1)
+	var count := GameState.wave_size() + randi_range(0, 1)
 	var wave: Array[PackedScene] = []
 	for i in count:
 		wave.append(scenes[_rng.rand_weighted(weights)])

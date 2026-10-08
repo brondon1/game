@@ -5,12 +5,13 @@ signal stats_changed
 signal weapons_changed
 
 const SAVE_PATH := "user://save.cfg"
-const FINAL_FLOOR := 6
-## 每两层是一个章节，换一种环境色调。[章节名, 环境光颜色]
+const FINAL_FLOOR := 12
+## 每三层是一个章节，换一种环境色调，Boss 也升一阶（会更多技能、弹幕更密）。[章节名, 环境光颜色]
 const CHAPTERS := [
 	["地牢入口", Color(0.7, 0.66, 0.68)],
 	["冰封墓穴", Color(0.5, 0.6, 0.88)],
 	["熔岩深渊", Color(0.82, 0.56, 0.52)],
+	["虚空王座", Color(0.66, 0.56, 0.86)],
 ]
 const MAX_WEAPONS := 2
 
@@ -98,6 +99,8 @@ var weapon_pool: Array[WeaponData] = [
 ]
 
 var current_floor := 1
+## 上一层打的是哪个 Boss（Room.BOSS_SCENES 的下标），下一层不会再抽到它
+var last_boss := -1
 var coins := 0
 var kills := 0
 
@@ -147,6 +150,7 @@ func _ready() -> void:
 ## 重置一局的状态（金币不清零，会一直带着）。属性 = 角色基础 + 角色等级加成 + 小道具加成。
 func new_run() -> void:
 	current_floor = 1
+	last_boss = -1
 	in_combat = false
 	kills = 0
 	var bonus := level_bonus(character)
@@ -201,12 +205,42 @@ func chapter_name() -> String:
 	return CHAPTERS[chapter()][0]
 
 
+## 每层的房间数：第 1 层 7 间，每两层多一间，第 12 层 12 间
+@warning_ignore("integer_division")
 func room_count() -> int:
-	return 6 + current_floor
+	return 7 + (current_floor - 1) / 2
 
 
+## 难度每层都往上调一点：敌人（包括 Boss）的血量、子弹速度、每波数量、每间房的波数
 func enemy_hp_mult() -> float:
-	return 1.0 + 0.25 * (current_floor - 1)
+	return 1.0 + 0.2 * (current_floor - 1)
+
+
+func enemy_bullet_speed_mult() -> float:
+	return 1.0 + 0.04 * (current_floor - 1)
+
+
+@warning_ignore("integer_division")
+func wave_size() -> int:
+	return mini(3 + (current_floor - 1) / 2, 8)
+
+
+func waves_per_room() -> int:
+	if current_floor == 1:
+		return 2
+	return 3 if current_floor < 7 else 4
+
+
+## 随机挑这一层的 Boss（不和上一层重复），返回下标
+func pick_boss(count: int) -> int:
+	var choices: Array = range(count).filter(func(i: int) -> bool: return i != last_boss)
+	last_boss = choices.pick_random()
+	return last_boss
+
+
+## Boss 的阶数（0～3）：跟着章节走，阶数越高 Boss 的技能越多、弹幕越密
+func boss_tier() -> int:
+	return chapter()
 
 
 # ---------- 数值 ----------

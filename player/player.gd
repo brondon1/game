@@ -13,6 +13,9 @@ extends CharacterBody2D
 ## 能量自然恢复：每秒回复多少点（保证扔掉手枪、没有能量时也不会打不了）
 @export var energy_regen_per_second := 1.0
 
+## 中毒减速时的移动速度倍率
+const SLOW_FACTOR := 0.6
+
 var aim_direction := Vector2.RIGHT
 var base_speed := 100.0
 var skill: Skill
@@ -31,6 +34,8 @@ var _afterimage_timer := 0.0
 var _anim_time := 0.0
 var _dust_timer := 0.0
 var _sprite_base_y := 0.0
+## 被僵尸王的毒液弹打中后减速的剩余时间
+var _slow_time := 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var weapon_pivot: Node2D = $WeaponPivot
@@ -65,6 +70,10 @@ func _physics_process(delta: float) -> void:
 	else:
 		var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		velocity = input * base_speed * GameState.speed_mult
+		if _slow_time > 0.0:
+			_slow_time -= delta
+			velocity *= SLOW_FACTOR
+			sprite.self_modulate = Color("97da3f") if _slow_time > 0.0 else Color.WHITE
 	move_and_slide()
 
 	_update_aim()
@@ -125,6 +134,12 @@ func _fire(w: Weapon) -> void:
 	if not GameState.use_energy(w.data.energy_cost):
 		return # 能量不足
 	w.fire(Bullet.Team.PLAYER, GameState.damage_mult, GameState.fire_rate_mult)
+
+
+## 毒液减速：一段时间内走得慢，身上发绿
+func apply_slow(duration: float) -> void:
+	if not _dead:
+		_slow_time = maxf(_slow_time, duration)
 
 
 func take_damage(amount: int, _direction := Vector2.ZERO) -> void:

@@ -198,7 +198,8 @@ func spawn_minion(scene: PackedScene, pos: Vector2) -> Enemy:
 func shoot_bullet(angle: float, bullet_speed: float, damage := 1) -> Bullet:
 	var bullet: Bullet = BULLET_SCENE.instantiate()
 	get_tree().current_scene.add_child(bullet)
-	bullet.setup(Bullet.Team.ENEMY, global_position + Vector2(0, -4), angle, bullet_speed, damage, 400.0)
+	bullet.setup(Bullet.Team.ENEMY, global_position + Vector2(0, -4), angle,
+		bullet_speed * GameState.enemy_bullet_speed_mult(), damage, 400.0) # 越往下子弹越快
 	Sound.play(Sound.ENEMY_SHOT, -10.0)
 	return bullet
 
