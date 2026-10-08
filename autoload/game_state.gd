@@ -430,7 +430,17 @@ func next_reward_text(ch: CharacterData) -> String:
 	var level := level_of(ch)
 	if level >= MAX_LEVEL:
 		return ""
-	return "%s +%d" % [REWARD_NAMES[reward_stat(ch, level - 1)], LEVEL_REWARDS[level - 1][1]]
+	return "%s +%d · 技能冷却 -%d%%" % [REWARD_NAMES[reward_stat(ch, level - 1)], LEVEL_REWARDS[level - 1][1],
+		roundi(SKILL_COOLDOWN_PER_LEVEL * 100)]
+
+
+## 每升一级技能冷却缩短多少（Lv.10 一共 -36%）
+const SKILL_COOLDOWN_PER_LEVEL := 0.04
+
+
+## 技能冷却倍率：等级越高冷却越短
+func skill_cooldown_mult(ch: CharacterData = null) -> float:
+	return 1.0 - SKILL_COOLDOWN_PER_LEVEL * (level_of(ch if ch else character) - 1)
 
 
 ## 在大厅花经验升一级（只改初始属性，下一局开始生效）。经验不够或满级时返回 false。

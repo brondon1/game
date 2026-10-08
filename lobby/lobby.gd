@@ -294,7 +294,7 @@ func _upgrade() -> void:
 	var stats := "生命 %d" % (ch.max_hp + bonus.hp)
 	if GameState.has_shield(ch):
 		stats += " · 护盾 %d" % (ch.max_shield + bonus.shield)
-	stats += " · 能量 %d" % (ch.max_energy + bonus.energy)
+	stats += " · 能量 %d · 技能冷却 -%d%%" % [ch.max_energy + bonus.energy, roundi((1.0 - GameState.skill_cooldown_mult(ch)) * 100)]
 	dialog.title.text = _dialog_title(ch)
 	dialog.set_body("变强了！现在的初始属性：%s" % stats)
 	dialog.set_buttons(_npc_buttons())

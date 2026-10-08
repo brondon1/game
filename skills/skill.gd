@@ -1,7 +1,7 @@
 class_name Skill
 extends Node
 ## 角色技能基类。子类重写 _activate()；有持续时间的技能在 _end() 里撤销效果。
-## 冷却从技能效果结束后才开始计算。
+## 冷却从技能效果结束后才开始计算。角色每升一级，冷却缩短一点（GameState.skill_cooldown_mult()）。
 ## 持续时间不固定的技能（比如冲刺到敌人身边）可以在 _activate() 里直接改 _active_left。
 
 @export var display_name := "技能"
@@ -29,13 +29,19 @@ func is_active() -> bool:
 func charge() -> float:
 	if is_active():
 		return 0.0
-	return 1.0 - _cooldown_left / cooldown if cooldown > 0.0 else 1.0
+	var total := effective_cooldown()
+	return 1.0 - _cooldown_left / total if total > 0.0 else 1.0
+
+
+## 算上角色等级之后的实际冷却时间
+func effective_cooldown() -> float:
+	return cooldown * GameState.skill_cooldown_mult()
 
 
 func try_activate() -> bool:
 	if not is_ready():
 		return false
-	_cooldown_left = cooldown
+	_cooldown_left = effective_cooldown()
 	_active_left = duration
 	Sound.play(sound, 0.0, 0.0)
 	_activate()
