@@ -15,4 +15,4 @@ max_energy = 220
 speed = 95.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
-lines = PackedStringArray("我的炮台会自己打怪，最多能同时摆三座。", "炮台打的是跟踪火箭，绕着柱子跑也躲不掉。", "冲锋枪射得快，挂着炮台一起打最顺手。", "扳手和螺丝，是机械师最好的朋友。")
+lines = PackedStringArray("我的炮台会自己打怪，最多能同时摆三座。", "炮台打的是跟踪火箭，绕着柱子跑也躲不掉。", "冲锋枪射得快，挂着炮台一起打最顺手。", "这身机甲是我自己一颗螺丝一颗螺丝拧出来的。")
