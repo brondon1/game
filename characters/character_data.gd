@@ -15,6 +15,9 @@ const WALK_FRAMES := 4
 @export var starting_weapon: WeaponData
 ## 技能场景：根节点挂一个继承 Skill 的脚本
 @export var skill_scene: PackedScene
+## 可选技能（脚本路径，每个都继承 Skill）。填了的话一次带其中一个，在大厅和这个角色对话时切换；
+## 没填就用 skill_scene。法师的技能按流派分，见 MageBranches。
+@export var skill_options: PackedStringArray = []
 ## 贴图横向一共几帧（只有一帧的贴图填 1）
 @export var hframes := 8
 ## 在大厅里和这个角色聊天时说的话（每次聊天换下一句）

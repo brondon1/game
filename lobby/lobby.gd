@@ -149,18 +149,21 @@ func _set_portal_open(opened: bool) -> void:
 		_portal.reset()
 
 
-## 书架上放着法术书：随时都能来这里切换法师的流派和技能（正在用法师时，人群里没有法师可以对话）
+## 书架上放着技能书：正在用的角色能换技能的话（法师、女巫……）在这里换（人群里没有自己可以对话），
+## 否则打开法师的流派和技能
 func _add_spellbook_shelf() -> void:
 	var shelf: LobbyNpc = NPC_SCENE.instantiate()
-	shelf.display_name = "法术书架"
+	shelf.display_name = "技能书架"
 	shelf.texture = load(HOME + "bookshelf.png")
 	shelf.show_sprite = false
 	shelf.action = "翻阅"
 	shelf.position = SHELF_POS
 	shelf.talked.connect(func(_npc: LobbyNpc) -> void:
-		var mage: LobbyNpc = _npcs.filter(func(n: LobbyNpc) -> bool: return GameState.is_mage(n.character)).front()
-		_on_npc_talked(mage)
-		_show_mage_skill())
+		var own := GameState.has_skill_options(GameState.character)
+		var who: LobbyNpc = _npcs.filter(func(n: LobbyNpc) -> bool:
+			return n.character == GameState.character if own else GameState.is_mage(n.character)).front()
+		_on_npc_talked(who)
+		_show_skill())
 	entities.add_child(shelf)
 
 
@@ -295,10 +298,11 @@ func _npc_buttons() -> Array:
 		buttons.append(["升级：%s（%s %d 经验）" % [GameState.next_reward_text(ch), "花费" if can else "需要",
 			GameState.upgrade_cost(level)], _upgrade, not can])
 	if GameState.is_mage(ch): # 法师：切换流派、换这个流派带的技能（一次只能带一个）
-		var index := GameState.mage_skill_index()
-		var count := MageBranches.skill_count(GameState.mage_branch)
 		buttons.append(["流派：%s ▸" % MageBranches.branch_name(GameState.mage_branch), _next_branch])
-		buttons.append(["技能：%s（%d/%d）▸" % [_mage_skill_info().name, index + 1, count], _next_mage_skill])
+	if GameState.has_skill_options(ch): # 有多个技能可选的角色：一次只能带一个
+		var index := GameState.mage_skill_index() if GameState.is_mage(ch) else GameState.skill_choice(ch)
+		var count := MageBranches.skill_count(GameState.mage_branch) if GameState.is_mage(ch) else ch.skill_options.size()
+		buttons.append(["技能：%s（%d/%d）▸" % [_skill_info(ch).name, index + 1, count], _next_skill])
 	buttons.append(["选这个角色", _select])
 	buttons.append(["离开", dialog.close])
 	return buttons
@@ -306,17 +310,19 @@ func _npc_buttons() -> Array:
 
 # ---------- 法师流派 ----------
 
-## 当前流派带的技能：名字、说明、冷却
-func _mage_skill_info() -> Dictionary:
-	var skill := MageBranches.create_skill(GameState.mage_branch, GameState.mage_skill_index())
+## 角色现在带的技能：名字、说明、冷却
+func _skill_info(ch: CharacterData) -> Dictionary:
+	var skill := GameState.create_skill(ch)
 	var info := {"name": skill.display_name, "desc": skill.description, "cooldown": skill.cooldown}
 	skill.free()
 	return info
 
 
-func _show_mage_skill() -> void:
-	var info := _mage_skill_info()
-	dialog.set_body("【%s】%s：%s（冷却 %d 秒）" % [MageBranches.branch_name(GameState.mage_branch), info.name, info.desc, roundi(info.cooldown)])
+func _show_skill() -> void:
+	var ch := _talking.character
+	var info := _skill_info(ch)
+	var prefix := "【%s】" % MageBranches.branch_name(GameState.mage_branch) if GameState.is_mage(ch) else ""
+	dialog.set_body("%s%s：%s（冷却 %d 秒）" % [prefix, info.name, info.desc, roundi(info.cooldown)])
 	dialog.set_buttons(_npc_buttons())
 
 
@@ -326,18 +332,22 @@ func _next_branch() -> void:
 	_mage_changed()
 
 
-func _next_mage_skill() -> void:
-	GameState.set_mage_skill((GameState.mage_skill_index() + 1) % MageBranches.skill_count(GameState.mage_branch))
+func _next_skill() -> void:
+	var ch := _talking.character
+	if GameState.is_mage(ch):
+		GameState.set_mage_skill((GameState.mage_skill_index() + 1) % MageBranches.skill_count(GameState.mage_branch))
+	else:
+		GameState.set_skill_choice(ch, (GameState.skill_choice(ch) + 1) % ch.skill_options.size())
 	_mage_changed()
 
 
-## 换了流派或技能：对话框、法师的外观、（正在用法师的话）玩家的外观和技能都跟着换
+## 换了流派或技能：对话框、角色的外观、（正在用这个角色的话）玩家的外观和技能都跟着换
 func _mage_changed() -> void:
 	Sound.play(Sound.CLICK, -4.0, 0.0)
 	_talking.refresh_look()
 	dialog.portrait.texture = _talking.character.icon()
-	_show_mage_skill()
-	if GameState.is_mage(GameState.character):
+	_show_skill()
+	if _talking.character == GameState.character:
 		_respawn_player(player.global_position)
 
 

@@ -1,6 +1,6 @@
 class_name MageSkill
 extends Skill
-## 元素法师技能的基类：放一些各流派技能都要用的小工具（找敌人、清子弹、按伤害倍率算伤害……）。
+## 法术类技能的基类（法师各流派、女巫都用）：放一些技能都要用的小工具（找敌人、清子弹、按伤害倍率算伤害……）。
 ## 每个技能在 _init() 里写自己的名字、说明、冷却和持续时间。
 
 const SKILL_SPRITES := "res://assets/sprites/skills/"

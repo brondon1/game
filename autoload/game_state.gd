@@ -440,6 +440,8 @@ func next_reward_text(ch: CharacterData) -> String:
 ## 法师当前的流派和每个流派带的技能（流派 id → 技能下标），存档
 var mage_branch := "arcane"
 var mage_skills := {}
+## 其他有多个可选技能的角色：角色 id → 带的技能下标
+var skill_choices := {}
 
 
 func is_mage(ch: CharacterData) -> bool:
@@ -455,7 +457,27 @@ func character_texture(ch: CharacterData) -> Texture2D:
 func create_skill(ch: CharacterData) -> Skill:
 	if is_mage(ch):
 		return MageBranches.create_skill(mage_branch, mage_skill_index())
+	if not ch.skill_options.is_empty():
+		var path := ch.skill_options[clampi(skill_choice(ch), 0, ch.skill_options.size() - 1)]
+		var skill: Skill = load(path).new()
+		skill.name = path.get_file().get_basename().to_pascal_case()
+		return skill
 	return ch.skill_scene.instantiate()
+
+
+## 有多个可选技能的角色（女巫、机械师……）现在带的是第几个
+func skill_choice(ch: CharacterData) -> int:
+	return skill_choices.get(character_id(ch), 0)
+
+
+func set_skill_choice(ch: CharacterData, index: int) -> void:
+	skill_choices[character_id(ch)] = index
+	save_progress()
+
+
+## 能不能换技能（法师换流派里的技能，其他角色在 skill_options 里选）
+func has_skill_options(ch: CharacterData) -> bool:
+	return is_mage(ch) or not ch.skill_options.is_empty()
 
 
 func mage_skill_index(branch := "") -> int:
@@ -627,6 +649,7 @@ func save_progress() -> void:
 	cfg.set_value("next_run", "buffs", next_buffs)
 	cfg.set_value("mage", "branch", mage_branch)
 	cfg.set_value("mage", "skills", mage_skills)
+	cfg.set_value("skills", "choices", skill_choices)
 	cfg.save(SAVE_PATH)
 
 
@@ -653,3 +676,4 @@ func _load_record() -> void:
 		next_buffs.assign(cfg.get_value("next_run", "buffs", []))
 		mage_branch = cfg.get_value("mage", "branch", "arcane")
 		mage_skills = cfg.get_value("mage", "skills", {})
+		skill_choices = cfg.get_value("skills", "choices", {})

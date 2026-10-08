@@ -49,6 +49,8 @@ var _poison_damage := 1
 ## 被冰冻 / 眩晕 / 困住：这段时间里不能动、不能攻击；冰冻时受到的伤害更高
 var _stun_time := 0.0
 var _frozen := false
+## 被女巫诅咒的剩余时间：受到的伤害 +50%，死的时候炸出一圈打敌人的子弹
+var _curse_time := 0.0
 ## 被黑洞、龙卷风拖着走时的额外速度（每帧由技能设置）
 var _pull := Vector2.ZERO
 var _sprite_base_y := 0.0
@@ -105,6 +107,8 @@ func _physics_process(delta: float) -> void:
 	_update_poison(delta)
 	if _dead:
 		return
+	if _curse_time > 0.0:
+		_curse_time -= delta
 	var current_speed := speed
 	if _slow_time > 0.0:
 		_slow_time -= delta
@@ -161,7 +165,7 @@ func chase_direction() -> Vector2:
 func take_damage(amount: int, direction := Vector2.ZERO) -> void:
 	if not is_targetable():
 		return
-	if _frozen:
+	if _frozen or _curse_time > 0.0:
 		amount = ceili(amount * FROZEN_DAMAGE_MULT)
 	hp -= amount
 	_knockback = direction * knockback_strength
@@ -183,6 +187,15 @@ func apply_stun(duration: float, tint: Color, frozen := false) -> void:
 	_stun_time = maxf(_stun_time, duration)
 	_frozen = _frozen or frozen
 	sprite.self_modulate = tint
+
+
+## 诅咒 duration 秒（女巫）
+func apply_curse(duration: float) -> void:
+	_curse_time = maxf(_curse_time, duration)
+
+
+func is_cursed() -> bool:
+	return _curse_time > 0.0
 
 
 func is_stunned() -> bool:
@@ -281,8 +294,19 @@ func _die() -> void:
 	Events.screen_shake.emit(1.5)
 	Sound.play(Sound.ENEMY_DIE, -3.0)
 	GameState.kills += 1
+	if _curse_time > 0.0: # 诅咒：死的时候炸出一圈子弹
+		_curse_burst()
 	died.emit(self)
 	queue_free()
+
+
+func _curse_burst() -> void:
+	for i in 8:
+		var bullet: Bullet = BULLET_SCENE.instantiate()
+		get_tree().current_scene.add_child(bullet)
+		bullet.setup(Bullet.Team.PLAYER, global_position + Vector2(0, -4), TAU * i / 8.0, 180.0,
+			maxi(1, roundi(4 * GameState.damage_mult)), 140.0)
+		bullet.modulate = Color(0.8, 0.5, 1.6)
 
 
 func _drop(kind: Pickup.Kind, amount: int) -> void:
