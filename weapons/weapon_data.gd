@@ -35,6 +35,13 @@ extends Resource
 @export var slow_duration := 0.0
 ## 大于 0 时子弹会追踪附近的敌人，数值是转向速度（弧度/秒）
 @export var homing := 0.0
+## 命中后让敌人中毒的时间（秒），中毒期间每 0.5 秒掉 poison_damage 点血
+@export var poison_duration := 0.0
+@export var poison_damage := 1
+## 闪电连锁：命中后电流跳到附近最多几个敌人（每跳一次伤害打七折）
+@export var chain_count := 0
+## 电流能跳多远（像素）
+@export var chain_range := 70.0
 
 @export_group("近战")
 ## 勾选后变成近战武器：挥砍扇形范围内的所有敌人，并打掉范围内的敌方子弹。

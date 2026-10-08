@@ -2,19 +2,17 @@ class_name ShopItem
 extends Area2D
 ## 商店里的一件商品：下方显示价格，玩家靠近时显示名字，按 E 花金币购买。
 
-enum Kind { WEAPON, POTION, ENERGY, BUFF }
+enum Kind { WEAPON, ITEM, BUFF }
 
 const WEAPON_PICKUP_SCENE := preload("res://pickups/weapon_pickup.tscn")
-const ICONS := {
-	Kind.POTION: preload("res://assets/sprites/potion.png"),
-	Kind.ENERGY: preload("res://assets/sprites/energy.png"),
-	Kind.BUFF: preload("res://assets/sprites/buff_star.png"),
-}
+const BUFF_ICON := preload("res://assets/sprites/buff_star.png")
 
-@export var kind := Kind.POTION
+@export var kind := Kind.ITEM
 @export var price := 10
 ## 只有 kind 为 WEAPON 时使用
 @export var weapon: WeaponData
+## 只有 kind 为 ITEM 时使用：GameState.ITEMS 里的道具 id
+@export var item_id := "potion"
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var price_label: Label = $Price/PriceLabel
@@ -24,7 +22,13 @@ const ICONS := {
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
-	sprite.texture = weapon.texture if kind == Kind.WEAPON else ICONS[kind]
+	match kind:
+		Kind.WEAPON:
+			sprite.texture = weapon.texture
+		Kind.ITEM:
+			sprite.texture = GameState.ITEMS[item_id].icon
+		Kind.BUFF:
+			sprite.texture = BUFF_ICON
 	price_label.text = str(price)
 	name_label.text = "[E] 购买 " + _item_name()
 	name_label.hide()
@@ -50,10 +54,8 @@ func interact(_player: Player) -> void:
 				pickup.data = dropped
 				pickup.position = position + Vector2(0, 20)
 				get_parent().add_child.call_deferred(pickup)
-		Kind.POTION:
-			GameState.heal(2)
-		Kind.ENERGY:
-			GameState.add_energy(100)
+		Kind.ITEM:
+			GameState.use_item(item_id)
 		Kind.BUFF:
 			var buff: Dictionary = GameState.random_buffs(1)[0]
 			GameState.apply_buff(buff.id)
@@ -65,10 +67,9 @@ func _item_name() -> String:
 	match kind:
 		Kind.WEAPON:
 			return weapon.describe()
-		Kind.POTION:
-			return "生命药水（+2 生命）"
-		Kind.ENERGY:
-			return "能量瓶（+100 能量）"
+		Kind.ITEM:
+			var item: Dictionary = GameState.ITEMS[item_id]
+			return "%s（%s）" % [item.name, item.desc]
 	return "神秘强化（随机一个）"
 
 

@@ -115,6 +115,12 @@ layout_mode = 2
 text = "180/180"
 vertical_alignment = 1
 
+[node name="Boosts" type="HBoxContainer" parent="Stats/Rows"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 3
+
 [node name="MinimapPanel" type="PanelContainer" parent="."]
 anchors_preset = 1
 anchor_left = 1.0
@@ -326,6 +332,7 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 1
 
 [node name="BossName" type="Label" parent="BossPanel/Row/Text"]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_colors/font_color = Color(0.863, 0.29, 0.482, 1)
 text = "地牢恶魔"

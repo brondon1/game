@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="WeaponData" format=3]
+
+[ext_resource type="Script" path="res://weapons/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/tesla.png" id="2_tex"]
+[ext_resource type="AudioStream" path="res://assets/audio/frost.wav" id="3_sound"]
+[ext_resource type="Texture2D" path="res://assets/sprites/bolt.png" id="4_bullet"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "雷电枪"
+texture = ExtResource("2_tex")
+sound = ExtResource("3_sound")
+bullet_texture = ExtResource("4_bullet")
+muzzle_offset = Vector2(19, -1)
+damage = 3
+fire_interval = 0.3
+energy_cost = 2
+spread_degrees = 4.0
+bullet_speed = 380.0
+bullet_range = 300.0
+chain_count = 3
+chain_range = 70.0

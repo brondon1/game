@@ -8,7 +8,12 @@ enum State { IDLE, FIGHTING, CLEARED }
 
 const SLIME_SCENE := preload("res://enemies/slime.tscn")
 const GUNNER_SCENE := preload("res://enemies/gunner.tscn")
-const BOSS_SCENE := preload("res://enemies/boss.tscn")
+## 各层的 Boss 按顺序轮换：食人魔 → 僵尸王 → 地牢恶魔，第 4 层起再来一遍强化版
+const BOSS_SCENES: Array[PackedScene] = [
+	preload("res://enemies/ogre.tscn"),
+	preload("res://enemies/zombie_king.tscn"),
+	preload("res://enemies/boss.tscn"),
+]
 
 ## 刷怪表：[敌人场景, 从第几层开始出现, 出现权重]。加新敌人就在这里加一行。
 const ENEMY_TABLE := [
@@ -111,7 +116,7 @@ func _spawn_wave() -> void:
 	_waves_left -= 1
 	var wave: Array[PackedScene] = _random_wave()
 	if type == Type.BOSS:
-		wave.assign([BOSS_SCENE])
+		wave.assign([BOSS_SCENES[(GameState.current_floor - 1) % BOSS_SCENES.size()]])
 	for scene in wave:
 		var enemy: Enemy = scene.instantiate()
 		enemy.position = rect.get_center() if type == Type.BOSS else _random_spawn_point()
@@ -130,7 +135,7 @@ func _random_wave() -> Array[PackedScene]:
 		if GameState.current_floor >= entry[1]:
 			scenes.append(entry[0])
 			weights.append(entry[2])
-	var count := 2 + GameState.current_floor + randi_range(0, 1)
+	var count := mini(2 + GameState.current_floor, 6) + randi_range(0, 1)
 	var wave: Array[PackedScene] = []
 	for i in count:
 		wave.append(scenes[_rng.rand_weighted(weights)])
@@ -214,19 +219,20 @@ func _spawn_shop() -> void:
 	_entities.add_child(merchant)
 	BlobShadow.add_to(merchant)
 
-	# 商品：一把随机武器、药水、能量、神秘强化。价格随楼层上涨一点。
+	# 商品：一把随机武器、3 种不重复的随机药水、神秘强化。价格随楼层上涨一点。
 	var floor_bonus := (GameState.current_floor - 1) * 2
-	var goods := [
-		[ShopItem.Kind.WEAPON, 18 + floor_bonus],
-		[ShopItem.Kind.POTION, 10 + floor_bonus],
-		[ShopItem.Kind.ENERGY, 6 + floor_bonus],
-		[ShopItem.Kind.BUFF, 30 + floor_bonus * 2],
-	]
+	var item_ids: Array = GameState.ITEMS.keys()
+	item_ids.shuffle()
+	var goods := [[ShopItem.Kind.WEAPON, 18 + floor_bonus, ""]]
+	for id: String in item_ids.slice(0, 3):
+		goods.append([ShopItem.Kind.ITEM, GameState.ITEMS[id].price + floor_bonus, id])
+	goods.append([ShopItem.Kind.BUFF, 30 + floor_bonus * 2, ""])
 	for i in goods.size():
 		var item: ShopItem = SHOP_ITEM_SCENE.instantiate()
 		item.kind = goods[i][0]
 		item.price = goods[i][1]
+		item.item_id = goods[i][2] if goods[i][2] != "" else "potion"
 		if item.kind == ShopItem.Kind.WEAPON:
 			item.weapon = GameState.random_new_weapon()
-		item.position = center + Vector2(-54 + i * 36, 10)
+		item.position = center + Vector2(-64 + i * 32, 10)
 		_entities.add_child(item)

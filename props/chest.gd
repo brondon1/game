@@ -1,7 +1,7 @@
 class_name Chest
 extends StaticBody2D
 ## 宝箱：走近按 E 打开，奖励会从箱子里弹出来。
-## 金宝箱（宝箱房）给一把武器和药水；补给箱（清完战斗房后可能出现）给金币和能量。
+## 金宝箱（宝箱房）给一把武器和一瓶随机药水；补给箱（清完战斗房后可能出现）给金币和能量，有时还有药水。
 
 enum Kind { WEAPON, SUPPLY }
 
@@ -11,6 +11,9 @@ const TEXTURES := {
 	Kind.WEAPON: [preload("res://assets/sprites/chest_gold_closed.png"), preload("res://assets/sprites/chest_gold_open.png")],
 	Kind.SUPPLY: [preload("res://assets/sprites/chest_closed.png"), preload("res://assets/sprites/chest_open.png")],
 }
+
+## 补给箱里额外掉一瓶药水的概率
+const SUPPLY_ITEM_CHANCE := 0.3
 
 @export var kind := Kind.SUPPLY
 
@@ -52,12 +55,22 @@ func _spawn_loot() -> void:
 			weapon.data = GameState.random_new_weapon()
 			weapon.position = position + Vector2(-10, 18)
 			get_parent().add_child(weapon)
-			_drop(Pickup.Kind.HEALTH, 2, Vector2(12, 18))
+			_drop_item(GameState.random_item(), Vector2(12, 18))
 		Kind.SUPPLY:
 			for i in randi_range(3, 6):
 				_drop(Pickup.Kind.COIN, 1, Vector2(randf_range(-14, 14), randf_range(10, 20)))
 			for i in 2:
 				_drop(Pickup.Kind.ENERGY, 8, Vector2(randf_range(-14, 14), randf_range(10, 20)))
+			if randf() < SUPPLY_ITEM_CHANCE:
+				_drop_item(GameState.random_item(), Vector2(randf_range(-10, 10), 22))
+
+
+func _drop_item(id: String, offset: Vector2) -> void:
+	var pickup: Pickup = PICKUP_SCENE.instantiate()
+	pickup.kind = Pickup.Kind.ITEM
+	pickup.item_id = id
+	pickup.position = position + offset
+	get_parent().add_child(pickup)
 
 
 func _drop(pickup_kind: Pickup.Kind, amount: int, offset: Vector2) -> void:

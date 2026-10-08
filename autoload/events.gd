@@ -10,6 +10,10 @@ signal room_cleared(room: Room)
 @warning_ignore("unused_signal")
 signal boss_health_changed(hp: int, max_hp: int)
 
+## Boss 出场（HUD 显示它的名字）
+@warning_ignore("unused_signal")
+signal boss_appeared(boss_name: String)
+
 @warning_ignore("unused_signal")
 signal screen_shake(strength: float)
 

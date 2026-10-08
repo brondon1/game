@@ -15,9 +15,12 @@ const CONTROLS_TIME := 10.0
 const COIN_FPS := 8.0
 
 var _message_tween: Tween
+var _message_queue: Array[String] = []
 var _player: Player
 var _skill_styles := {}
 var _skill_state := ""
+## 限时药剂一栏当前显示的是哪些药剂（变了才重建）
+var _shown_boosts: Array = []
 var _time := 0.0
 
 @onready var hp_bar: ProgressBar = %HpBar
@@ -36,11 +39,13 @@ var _time := 0.0
 @onready var swap_label: Label = %SwapLabel
 @onready var boss_panel: Control = %BossPanel
 @onready var boss_bar: ProgressBar = %BossBar
+@onready var boss_name: Label = %BossName
 @onready var message: Label = %Message
 @onready var minimap: Minimap = %Minimap
 @onready var skill_label: Label = %SkillLabel
 @onready var skill_bar: ProgressBar = %SkillBar
 @onready var controls: Label = %Controls
+@onready var boosts_row: HBoxContainer = %Boosts
 @onready var skill_panel: Control = %SkillPanel
 @onready var weapon_panel: Control = %WeaponPanel
 @onready var stats_panel: Control = $Stats
@@ -63,6 +68,7 @@ func _ready() -> void:
 	GameState.stats_changed.connect(_refresh_stats)
 	GameState.weapons_changed.connect(_refresh_weapon)
 	Events.boss_health_changed.connect(_on_boss_health_changed)
+	Events.boss_appeared.connect(func(boss: String) -> void: boss_name.text = boss)
 	Events.message.connect(show_message)
 	_refresh_stats()
 	_refresh_weapon()
@@ -73,6 +79,7 @@ func _use_touch_layout() -> void:
 	skill_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT, Control.PRESET_MODE_KEEP_SIZE, 4)
 	weapon_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT, Control.PRESET_MODE_KEEP_SIZE, 4)
 	_stack_touch_panels.call_deferred() # 等面板按内容算好尺寸后再往下排
+	stats_panel.resized.connect(_stack_touch_panels) # 喝了限时药剂，生命值面板会多一行
 	swap_label.hide() # 右下角有换枪按钮
 	controls.text = "左边拖动移动 · 右下按钮攻击、技能、换枪"
 
@@ -100,9 +107,20 @@ func _process(delta: float) -> void:
 		controls.modulate.a = maxf(0.0, 0.8 - (_time - CONTROLS_TIME))
 		controls.visible = controls.modulate.a > 0.0
 	_update_skill()
+	_update_boosts()
 
 
-func show_message(text: String) -> void:
+## 在屏幕中央显示一行提示。queued 为 true 时排在正在显示的提示后面（比如过关时的经验、升级提示），
+## 否则立即替换掉当前的提示。
+func show_message(text: String, queued := false) -> void:
+	if queued and _message_tween and _message_tween.is_running():
+		_message_queue.append(text)
+		return
+	_message_queue.clear()
+	_play_message(text)
+
+
+func _play_message(text: String) -> void:
 	message.text = text
 	if _message_tween:
 		_message_tween.kill()
@@ -110,6 +128,9 @@ func show_message(text: String) -> void:
 	_message_tween.tween_property(message, "modulate:a", 1.0, 0.2)
 	_message_tween.tween_interval(1.2)
 	_message_tween.tween_property(message, "modulate:a", 0.0, 0.4)
+	_message_tween.tween_callback(func() -> void:
+		if not _message_queue.is_empty():
+			_play_message(_message_queue.pop_front()))
 
 
 func _refresh_stats() -> void:
@@ -130,6 +151,30 @@ func _refresh_weapon() -> void:
 	if swap_label.visible:
 		var other := GameState.weapons[(GameState.weapon_index + 1) % GameState.weapons.size()]
 		swap_label.text = "[Q] 切换到 %s" % other.display_name
+
+
+## 限时药剂：图标 + 剩余秒数，没有生效的药剂时整行隐藏。
+func _update_boosts() -> void:
+	var ids: Array = GameState.boosts.keys()
+	if ids != _shown_boosts:
+		_shown_boosts = ids
+		for child in boosts_row.get_children():
+			child.queue_free()
+		for id: String in ids:
+			var icon := TextureRect.new()
+			icon.texture = GameState.ITEMS[id].icon
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+			icon.custom_minimum_size = Vector2(13, 12)
+			boosts_row.add_child(icon)
+			var label := Label.new()
+			label.name = id
+			boosts_row.add_child(label)
+		boosts_row.visible = not ids.is_empty()
+		stats_panel.reset_size.call_deferred() # 药剂结束后面板缩回去
+	for id: String in ids:
+		var label := boosts_row.get_node_or_null(NodePath(id)) as Label
+		if label:
+			label.text = "%ds" % ceili(GameState.boosts[id])
 
 
 ## 技能冷却条：冷却中灰色，可用时黄色，生效中青色。

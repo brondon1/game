@@ -49,8 +49,14 @@ func _build_character_buttons() -> void:
 func _select(character: CharacterData) -> void:
 	GameState.character = character
 	var skill: Skill = character.skill_scene.instantiate()
-	character_info.text = "%s　生命 %d · 护盾 %d · 能量 %d\n技能【%s】%s" % [
-		character.display_name, character.max_hp, character.max_shield, character.max_energy,
+	var level := GameState.level_of(character)
+	var xp := GameState.xp_of(character)
+	var progress := "满级" if level >= GameState.MAX_LEVEL else "经验 %d/%d" % [
+		xp - GameState.xp_for_level(level), GameState.xp_for_level(level + 1) - GameState.xp_for_level(level)]
+	var bonus := GameState.level_bonus(character)
+	character_info.text = "%s　Lv.%d（%s）\n生命 %d · 护盾 %d · 能量 %d\n技能【%s】%s" % [
+		character.display_name, level, progress,
+		character.max_hp + bonus.hp, character.max_shield + bonus.shield, character.max_energy + bonus.energy,
 		skill.display_name, skill.description]
 	skill.free()
 

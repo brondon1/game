@@ -1,5 +1,6 @@
-extends Enemy
-## Boss：在 追击 → 环形弹幕 → 追击 → 扇形连射 之间循环。血量变化会通知 HUD 显示 Boss 血条。
+extends Boss
+## 地牢恶魔：在 追击 → 环形弹幕 → 追击 → 扇形连射 之间循环。
+## 强化版：每圈子弹更多、扇形更宽、连射次数更多。
 
 enum Attack { CHASE, RING, FAN }
 
@@ -13,14 +14,11 @@ var _shot_timer := 0.0
 var _next_special := Attack.RING
 
 
-func _activate() -> void:
+func _ready() -> void:
 	super()
-	Events.boss_health_changed.emit(hp, max_hp)
-
-
-func take_damage(amount: int, direction := Vector2.ZERO) -> void:
-	super(amount, direction * 0.2) # Boss 几乎不吃击退
-	Events.boss_health_changed.emit(maxi(hp, 0), max_hp)
+	if enraged:
+		ring_bullets += 6
+		fan_bullets += 2
 
 
 func _think(delta: float) -> Vector2:
@@ -42,10 +40,10 @@ func _start_attack(attack: Attack) -> void:
 	_shot_timer = 0.4 # 起手停顿
 	match attack:
 		Attack.RING:
-			_shots_left = 3
+			_shots_left = 4 if enraged else 3
 			_next_special = Attack.FAN
 		Attack.FAN:
-			_shots_left = 6
+			_shots_left = 8 if enraged else 6
 			_next_special = Attack.RING
 
 
@@ -63,9 +61,7 @@ func _update_shots(delta: float, interval: float, fire: Callable) -> void:
 
 
 func _fire_ring() -> void:
-	var offset := _shots_left * 0.2 # 每一圈错开一点角度
-	for i in ring_bullets:
-		shoot_bullet(TAU * i / ring_bullets + offset, 90.0)
+	bullet_ring(ring_bullets, 90.0, _shots_left * 0.2) # 每一圈错开一点角度
 	Sound.play(Sound.BOSS_SHOT)
 	Events.screen_shake.emit(2.0)
 

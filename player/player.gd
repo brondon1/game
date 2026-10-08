@@ -10,6 +10,8 @@ extends CharacterBody2D
 ## 多久没受伤后开始回复护盾（秒）
 @export var shield_regen_delay := 3.0
 @export var shield_regen_interval := 1.0
+## 能量自然恢复：每秒回复多少点（保证扔掉手枪、没有能量时也不会打不了）
+@export var energy_regen_per_second := 1.0
 
 var aim_direction := Vector2.RIGHT
 var base_speed := 100.0
@@ -18,6 +20,7 @@ var skill: Skill
 var _invincible := 0.0
 var _since_hit := 0.0
 var _regen_timer := 0.0
+var _energy_regen := 0.0
 var _nearby_interactables: Array = []
 var _aim_target: Enemy
 var _dead := false
@@ -319,6 +322,13 @@ func _update_timers(delta: float) -> void:
 		if _regen_timer >= shield_regen_interval:
 			_regen_timer = 0.0
 			GameState.restore_shield(1)
+	if GameState.energy < GameState.max_energy:
+		_energy_regen += energy_regen_per_second * delta
+		if _energy_regen >= 1.0:
+			GameState.add_energy(int(_energy_regen))
+			_energy_regen -= int(_energy_regen)
+	else:
+		_energy_regen = 0.0
 
 
 func _die() -> void:

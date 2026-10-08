@@ -9,7 +9,7 @@ const WALK_FRAMES := 4
 @export var display_name := "角色"
 @export var texture: Texture2D
 @export var max_hp := 6
-@export var max_shield := 4
+@export var max_shield := 1
 @export var max_energy := 180
 @export var speed := 100.0
 @export var starting_weapon: WeaponData

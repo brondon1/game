@@ -110,8 +110,9 @@ func _ready() -> void:
 	Events.room_cleared.connect(_on_room_cleared)
 	Events.player_died.connect(_on_player_died)
 	buff_select.buff_chosen.connect(_on_buff_chosen)
+	$Ambient.color = GameState.CHAPTERS[GameState.chapter()][1]
 	_build(DungeonGenerator.generate(GameState.room_count()))
-	hud.show_message("第 %d 层" % GameState.current_floor)
+	hud.show_message("第 %d 层 · %s" % [GameState.current_floor, GameState.chapter_name()])
 	Sound.play_music(Sound.MUSIC_DUNGEON)
 
 
@@ -259,6 +260,11 @@ func _on_room_cleared(room: Room) -> void:
 	if room.type == Room.Type.BOSS:
 		_spawn_portal.call_deferred(room.rect.get_center())
 		hud.show_message("传送门已开启")
+		# 通过这一层：角色获得经验，升级的奖励立即生效
+		var result := GameState.grant_floor_xp()
+		hud.show_message("经验 +%d" % result.xp, true)
+		if not result.rewards.is_empty():
+			hud.show_message("升到 Lv.%d！%s" % [result.level, "，".join(PackedStringArray(result.rewards))], true)
 
 
 func _spawn_portal(pos: Vector2) -> void:

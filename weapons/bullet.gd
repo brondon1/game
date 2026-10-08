@@ -27,6 +27,10 @@ var explosion_radius := 0.0
 var bounces_left := 0
 var slow_duration := 0.0
 var homing := 0.0
+var poison_duration := 0.0
+var poison_damage := 1
+var chain_count := 0
+var chain_range := 70.0
 
 var _velocity := Vector2.ZERO
 var _range_left := 300.0
@@ -79,6 +83,10 @@ func apply_effects(data: WeaponData) -> void:
 	bounces_left = data.bounces
 	slow_duration = data.slow_duration
 	homing = data.homing
+	poison_duration = data.poison_duration
+	poison_damage = data.poison_damage
+	chain_count = data.chain_count
+	chain_range = data.chain_range
 
 
 func _physics_process(delta: float) -> void:
@@ -151,6 +159,10 @@ func _on_body_entered(body: Node2D) -> void:
 		body.take_damage(damage, _velocity.normalized())
 		if slow_duration > 0.0 and body.has_method("apply_slow"):
 			body.apply_slow(slow_duration)
+		if poison_duration > 0.0 and body.has_method("apply_poison"):
+			body.apply_poison(poison_duration, poison_damage)
+		if chain_count > 0 and body is Enemy:
+			Lightning.chain(get_parent(), body, damage, chain_count, chain_range)
 		if piercing:
 			return
 	elif bounces_left > 0:
@@ -167,7 +179,9 @@ func destroy() -> void:
 		Explosion.spawn(get_parent(), global_position, explosion_radius, damage, team)
 	else:
 		var color := Color("ffcd75") if team == Team.PLAYER else Color("ef7d57")
-		if slow_duration > 0.0:
-			color = Color("73eff7")
+		if slow_duration > 0.0 or chain_count > 0:
+			color = Color("72d6ce")
+		elif poison_duration > 0.0:
+			color = Color("97da3f")
 		HitEffect.spawn(get_parent(), global_position, color)
 	queue_free()

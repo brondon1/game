@@ -41,6 +41,9 @@ var _repath_timer := 0.0
 var _walk_time := 0.0
 var _anim_time := 0.0
 var _slow_time := 0.0
+var _poison_time := 0.0
+var _poison_tick := 0.0
+var _poison_damage := 1
 var _sprite_base_y := 0.0
 var _sprite_base_scale := Vector2.ONE
 
@@ -87,6 +90,9 @@ func _physics_process(delta: float) -> void:
 	if player and not player.is_dead():
 		move_dir = _think(delta)
 		sprite.flip_h = player.global_position.x < global_position.x
+	_update_poison(delta)
+	if _dead:
+		return
 	var current_speed := speed
 	if _slow_time > 0.0:
 		_slow_time -= delta
@@ -157,6 +163,27 @@ func apply_slow(duration: float) -> void:
 	sprite.self_modulate = Color(0.6, 0.85, 1.4)
 
 
+## 中毒：持续 duration 秒，每 0.5 秒掉 damage 点血（不会被击退），身上发绿。
+func apply_poison(duration: float, damage: int) -> void:
+	if _poison_time <= 0.0:
+		_poison_tick = 0.5
+	_poison_time = maxf(_poison_time, duration)
+	_poison_damage = maxi(_poison_damage, damage)
+	sprite.self_modulate = Color(0.75, 1.3, 0.6)
+
+
+func _update_poison(delta: float) -> void:
+	if _poison_time <= 0.0:
+		return
+	_poison_time -= delta
+	_poison_tick -= delta
+	if _poison_tick <= 0.0:
+		_poison_tick = 0.5
+		take_damage(_poison_damage)
+	if _poison_time <= 0.0 and _slow_time <= 0.0:
+		sprite.self_modulate = Color.WHITE
+
+
 ## 召唤或分裂出一个新敌人（和自己同样的血量倍率），并通知房间。
 func spawn_minion(scene: PackedScene, pos: Vector2) -> Enemy:
 	var minion: Enemy = scene.instantiate()
@@ -167,12 +194,13 @@ func spawn_minion(scene: PackedScene, pos: Vector2) -> Enemy:
 	return minion
 
 
-## 朝某个角度发射一颗敌方子弹，子类可复用。
-func shoot_bullet(angle: float, bullet_speed: float, damage := 1) -> void:
+## 朝某个角度发射一颗敌方子弹，子类可复用（返回子弹，方便换颜色）。
+func shoot_bullet(angle: float, bullet_speed: float, damage := 1) -> Bullet:
 	var bullet: Bullet = BULLET_SCENE.instantiate()
 	get_tree().current_scene.add_child(bullet)
 	bullet.setup(Bullet.Team.ENEMY, global_position + Vector2(0, -4), angle, bullet_speed, damage, 400.0)
 	Sound.play(Sound.ENEMY_SHOT, -10.0)
+	return bullet
 
 
 func has_line_of_sight_to_player() -> bool:

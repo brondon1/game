@@ -1,8 +1,8 @@
 class_name Pickup
 extends Area2D
-## 掉落物：金币、能量、生命药水。金币和能量靠近时会自动吸向玩家。
+## 掉落物：金币、能量、生命药水、各种药水道具。金币和能量靠近时会自动吸向玩家，药水要走过去捡。
 
-enum Kind { COIN, ENERGY, HEALTH }
+enum Kind { COIN, ENERGY, HEALTH, ITEM }
 
 const TEXTURES := {
 	Kind.COIN: preload("res://assets/sprites/coin.png"),
@@ -12,6 +12,8 @@ const TEXTURES := {
 
 @export var kind := Kind.COIN
 @export var amount := 1
+## 只有 kind 为 ITEM 时使用：GameState.ITEMS 里的道具 id
+@export var item_id := "potion"
 @export var magnet_radius := 60.0
 
 var _speed := 0.0
@@ -21,7 +23,7 @@ var _player: Node2D
 
 
 func _ready() -> void:
-	sprite.texture = TEXTURES[kind]
+	sprite.texture = GameState.ITEMS[item_id].icon if kind == Kind.ITEM else TEXTURES[kind]
 	BlobShadow.add_to(self, 0.5, Vector2(0, 5))
 	body_entered.connect(_on_body_entered)
 	_player = get_tree().get_first_node_in_group("player") as Node2D
@@ -31,7 +33,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if kind == Kind.HEALTH or _player == null:
+	if kind == Kind.HEALTH or kind == Kind.ITEM or _player == null:
 		return
 	if global_position.distance_to(_player.global_position) < magnet_radius:
 		_speed = minf(_speed + 500.0 * delta, 260.0)
@@ -51,4 +53,9 @@ func _on_body_entered(body: Node2D) -> void:
 		Kind.HEALTH:
 			GameState.heal(amount)
 			Sound.play(Sound.HEAL, 0.0, 0.0)
+		Kind.ITEM:
+			GameState.use_item(item_id)
+			Sound.play(Sound.HEAL, 0.0, 0.0)
+			var item: Dictionary = GameState.ITEMS[item_id]
+			Events.message.emit("%s：%s" % [item.name, item.desc])
 	queue_free()
