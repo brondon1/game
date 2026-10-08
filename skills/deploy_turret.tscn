@@ -7,5 +7,5 @@
 script = ExtResource("1_script")
 sound = ExtResource("2_sound")
 display_name = "奥术炮塔"
-description = "召唤一座自动射击的奥术炮塔，持续 8 秒"
-cooldown = 12.0
+description = "召唤一座发射跟踪火箭的炮塔，持续 12 秒，最多同时 3 座"
+cooldown = 4.0

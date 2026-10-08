@@ -1,7 +1,9 @@
 extends Skill
-## 女巫技能【奥术炮塔】：在脚下召唤一座会自动射击的炮塔，持续一段时间。
+## 女巫技能【奥术炮塔】：在脚下召唤一座发射跟踪火箭的炮塔，持续一段时间。
+## 冷却比炮塔的持续时间短，所以场上可以同时有好几座；超过上限时最老的那座收起来。
 
 const TURRET_SCENE := preload("res://skills/turret.tscn")
+const MAX_TURRETS := 3
 
 
 func _activate() -> void:
@@ -12,4 +14,7 @@ func _activate() -> void:
 	if not player.get_world_2d().direct_space_state.intersect_ray(query).is_empty():
 		spot = player.global_position
 	turret.position = spot
+	var existing := player.get_tree().get_nodes_in_group(Turret.GROUP)
+	for i in existing.size() - (MAX_TURRETS - 1): # 节点按加入顺序排，前面的最老
+		(existing[i] as Turret).dismiss()
 	player.get_parent().add_child(turret)

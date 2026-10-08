@@ -1,13 +1,20 @@
 class_name Turret
 extends Node2D
-## 女巫召唤的奥术炮塔：自动瞄准视线内最近的敌人开火，时间到了闪烁后消失。
+## 女巫召唤的奥术炮塔：瞄准视线内最近的敌人发射跟踪火箭（和火箭筒一样落地爆炸，飞行中会拐弯追敌人），
+## 时间到了闪烁后消失。可以同时存在好几座（上限见 DeployTurret.MAX_TURRETS）。
 
 const BULLET_SCENE := preload("res://weapons/bullet.tscn")
+const ROCKET_TEXTURE := preload("res://assets/sprites/rocket.png")
+const GROUP := &"turrets"
 
-@export var lifetime := 8.0
-@export var fire_interval := 0.3
-@export var damage := 3
-@export var attack_range := 200.0
+@export var lifetime := 12.0
+@export var fire_interval := 0.8
+@export var damage := 5
+@export var attack_range := 220.0
+@export var rocket_speed := 170.0
+@export var explosion_radius := 30.0
+## 跟踪的转向速度（和追踪弩同一套机制）
+@export var homing := 4.0
 
 var _fire_timer := 0.0
 
@@ -15,6 +22,7 @@ var _fire_timer := 0.0
 
 
 func _ready() -> void:
+	add_to_group(GROUP)
 	BlobShadow.add_to(self, 1.1)
 	sprite.self_modulate = Color(1.0, 0.75, 1.35) # 染成紫色，配合女巫的奥术主题
 	sprite.scale = Vector2(0.2, 0.2)
@@ -40,8 +48,17 @@ func _physics_process(delta: float) -> void:
 	sprite.flip_h = target.global_position.x < global_position.x
 	var bullet: Bullet = BULLET_SCENE.instantiate()
 	get_tree().current_scene.add_child(bullet)
-	bullet.setup(Bullet.Team.PLAYER, from, angle, 320.0, maxi(1, roundi(damage * GameState.damage_mult)), attack_range + 40.0)
+	bullet.setup(Bullet.Team.PLAYER, from, angle, rocket_speed, maxi(1, roundi(damage * GameState.damage_mult)), attack_range + 80.0)
+	bullet.sprite.texture = ROCKET_TEXTURE
+	bullet.explosion_radius = explosion_radius
+	bullet.homing = homing
 	Sound.play(Sound.SHOOT, -10.0)
+
+
+## 新炮塔放下时，超出上限的最老那座提前收起来
+func dismiss() -> void:
+	remove_from_group(GROUP)
+	lifetime = minf(lifetime, 0.4)
 
 
 func _find_target() -> Enemy:
