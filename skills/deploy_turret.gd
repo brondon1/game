@@ -6,6 +6,13 @@ const TURRET_SCENE := preload("res://skills/turret.tscn")
 const MAX_TURRETS := 3
 
 
+func _init() -> void: # 机械师在可选技能里直接用这个脚本（不经过场景），名字和冷却写在这里
+	display_name = "部署炮台"
+	description = "放一座发射跟踪火箭的炮台，持续 12 秒，最多同时 3 座"
+	cooldown = 4.0
+	sound = preload("res://assets/audio/skill_turret.wav")
+
+
 func _activate() -> void:
 	var turret: Turret = TURRET_SCENE.instantiate()
 	# 放在脚下偏下一点，免得被角色挡住；那里是墙的话就放在原地

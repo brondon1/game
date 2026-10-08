@@ -152,6 +152,7 @@ func _ready() -> void:
 func new_run() -> void:
 	current_floor = 1
 	last_boss = -1
+	free_energy = false
 	in_combat = false
 	kills = 0
 	var bonus := level_bonus(character)
@@ -264,7 +265,13 @@ func heal(amount: int) -> void:
 	stats_changed.emit()
 
 
+## 机械师"超载"期间开枪不耗能量
+var free_energy := false
+
+
 func use_energy(cost: int) -> bool:
+	if free_energy:
+		return true
 	if energy < cost:
 		return false
 	energy -= cost

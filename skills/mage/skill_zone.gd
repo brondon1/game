@@ -3,14 +3,17 @@ extends Node2D
 ## 法师技能留在地上的一片区域，持续 lifetime 秒，每 tick 秒对里面的东西起一次作用：
 ## - BURN 火焰：烧伤敌人；POISON 毒雾：让敌人中毒；FROST 冰雹：伤害并减速
 ## - HEAL 泉水：玩家站在里面回血；TIME 时间结界：敌人和敌方子弹变慢；PULL 黑洞：把敌人往中心拖、吞掉子弹
+## - SHIELD 护盾罩（机械师）：飞进罩子里的敌方子弹全部消失
 
-enum Kind { BURN, POISON, FROST, HEAL, TIME, PULL }
+enum Kind { BURN, POISON, FROST, HEAL, TIME, PULL, SHIELD }
 
 const COLORS := {
 	Kind.BURN: Color(0.93, 0.45, 0.18), Kind.POISON: Color(0.45, 0.75, 0.25), Kind.FROST: Color(0.7, 0.9, 1.0),
 	Kind.HEAL: Color(0.35, 0.75, 0.95), Kind.TIME: Color(0.55, 0.5, 1.0), Kind.PULL: Color(0.35, 0.15, 0.45),
+	Kind.SHIELD: Color(0.45, 0.85, 0.8),
 }
-const TICK := {Kind.BURN: 0.5, Kind.POISON: 0.5, Kind.FROST: 0.5, Kind.HEAL: 1.5, Kind.TIME: 0.0, Kind.PULL: 0.0}
+const TICK := {Kind.BURN: 0.5, Kind.POISON: 0.5, Kind.FROST: 0.5, Kind.HEAL: 1.5, Kind.TIME: 0.0, Kind.PULL: 0.0,
+	Kind.SHIELD: 0.0}
 
 var radius := 30.0
 var lifetime := 3.0
@@ -42,6 +45,8 @@ func _physics_process(delta: float) -> void:
 			_time_field()
 		Kind.PULL:
 			_pull()
+		Kind.SHIELD:
+			_block_bullets()
 	if TICK[kind] > 0.0:
 		_tick -= delta
 		if _tick <= 0.0:
@@ -95,6 +100,14 @@ func _pull() -> void:
 	for node in get_tree().get_nodes_in_group("enemy_bullets"):
 		var bullet := node as Bullet
 		if bullet and not bullet.is_queued_for_deletion() and bullet.global_position.distance_to(global_position) <= radius:
+			bullet.destroy()
+
+
+func _block_bullets() -> void:
+	for node in get_tree().get_nodes_in_group("enemy_bullets"):
+		var bullet := node as Bullet
+		if bullet and not bullet.is_queued_for_deletion() and bullet.global_position.distance_to(global_position) <= radius:
+			HitEffect.spawn(get_parent(), bullet.global_position, COLORS[kind], 3, 0.5)
 			bullet.destroy()
 
 
