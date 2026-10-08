@@ -21,9 +21,15 @@ const WALK_FRAMES := 4
 @export var lines: PackedStringArray = []
 
 
+## 现在的外观（法师会按流派换外观，见 GameState.character_texture()）
+func look() -> Texture2D:
+	return GameState.character_texture(self)
+
+
 ## 菜单里用的头像：动画的第一帧
 func icon() -> Texture2D:
+	var tex := look()
 	var atlas := AtlasTexture.new()
-	atlas.atlas = texture
-	atlas.region = Rect2(0, 0, texture.get_width() / hframes, texture.get_height())
+	atlas.atlas = tex
+	atlas.region = Rect2(0, 0, tex.get_width() / hframes, tex.get_height())
 	return atlas

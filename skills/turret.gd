@@ -15,6 +15,13 @@ const GROUP := &"turrets"
 @export var explosion_radius := 30.0
 ## 跟踪的转向速度（和追踪弩同一套机制）
 @export var homing := 4.0
+## false 时发射普通子弹（暗影法师的分身借用炮塔的逻辑）
+@export var fires_rockets := true
+## 是否算进女巫的炮塔上限
+@export var counts_as_turret := true
+## 跟着谁走（分身跟着玩家），为空时原地不动
+var follow: Node2D
+var follow_offset := Vector2.ZERO
 
 var _fire_timer := 0.0
 
@@ -22,7 +29,8 @@ var _fire_timer := 0.0
 
 
 func _ready() -> void:
-	add_to_group(GROUP)
+	if counts_as_turret:
+		add_to_group(GROUP)
 	BlobShadow.add_to(self, 1.1)
 	sprite.self_modulate = Color(1.0, 0.75, 1.35) # 染成紫色，配合女巫的奥术主题
 	sprite.scale = Vector2(0.2, 0.2)
@@ -36,6 +44,8 @@ func _physics_process(delta: float) -> void:
 		return
 	if lifetime < 1.5:
 		sprite.visible = int(lifetime * 10.0) % 2 == 0 # 快消失时闪烁
+	if is_instance_valid(follow):
+		global_position = global_position.lerp(follow.global_position + follow_offset, 0.2)
 	_fire_timer -= delta
 	if _fire_timer > 0.0:
 		return
@@ -48,7 +58,13 @@ func _physics_process(delta: float) -> void:
 	sprite.flip_h = target.global_position.x < global_position.x
 	var bullet: Bullet = BULLET_SCENE.instantiate()
 	get_tree().current_scene.add_child(bullet)
-	bullet.setup(Bullet.Team.PLAYER, from, angle, rocket_speed, maxi(1, roundi(damage * GameState.damage_mult)), attack_range + 80.0)
+	var amount := maxi(1, roundi(damage * GameState.damage_mult))
+	if not fires_rockets:
+		bullet.setup(Bullet.Team.PLAYER, from, angle, 300.0, amount, attack_range + 40.0)
+		bullet.modulate = Color(0.8, 0.5, 1.6)
+		Sound.play(Sound.SHOOT, -12.0)
+		return
+	bullet.setup(Bullet.Team.PLAYER, from, angle, rocket_speed, amount, attack_range + 80.0)
 	bullet.sprite.texture = ROCKET_TEXTURE
 	bullet.explosion_radius = explosion_radius
 	bullet.homing = homing

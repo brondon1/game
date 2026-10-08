@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="CharacterData" format=3]
+
+[ext_resource type="Script" path="res://characters/character_data.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/mechanic.png" id="2_tex"]
+[ext_resource type="Resource" path="res://weapons/data/smg.tres" id="3_weapon"]
+[ext_resource type="PackedScene" path="res://skills/deploy_turret.tscn" id="4_skill"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "机械师"
+texture = ExtResource("2_tex")
+max_hp = 6
+max_shield = 0
+max_energy = 220
+speed = 95.0
+starting_weapon = ExtResource("3_weapon")
+skill_scene = ExtResource("4_skill")
+lines = PackedStringArray("我的炮台会自己打怪，最多能同时摆三座。", "炮台打的是跟踪火箭，绕着柱子跑也躲不掉。", "冲锋枪射得快，挂着炮台一起打最顺手。", "扳手和螺丝，是机械师最好的朋友。")

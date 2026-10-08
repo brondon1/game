@@ -36,6 +36,10 @@ var _dust_timer := 0.0
 var _sprite_base_y := 0.0
 ## 被僵尸王的毒液弹打中后减速的剩余时间
 var _slow_time := 0.0
+## 法师技能给的保护：石盾还能挡几次伤害、闪避概率、圣光护罩（无敌但不闪烁）的剩余时间
+var damage_blocks := 0
+var dodge_chance := 0.0
+var _shielded_time := 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var weapon_pivot: Node2D = $WeaponPivot
@@ -47,14 +51,14 @@ var _slow_time := 0.0
 func _ready() -> void:
 	add_to_group("player")
 	var character := GameState.character
-	sprite.texture = character.texture
+	sprite.texture = character.look()
 	sprite.hframes = character.hframes
 	# 让脚踩在节点原点上：不同角色的贴图高度不一样
-	sprite.position.y = -character.texture.get_height() / 2.0 + 1.0
+	sprite.position.y = -sprite.texture.get_height() / 2.0 + 1.0
 	_sprite_base_y = sprite.position.y
 	BlobShadow.add_to(self)
 	base_speed = character.speed
-	skill = character.skill_scene.instantiate()
+	skill = GameState.create_skill(character)
 	skill.player = self
 	add_child(skill)
 	offhand.hide()
@@ -142,8 +146,28 @@ func apply_slow(duration: float) -> void:
 		_slow_time = maxf(_slow_time, duration)
 
 
+## 一段时间内完全无敌（圣光屏障、雷霆闪现用），不像受伤后的无敌那样闪烁
+func shield_for(time: float) -> void:
+	_shielded_time = maxf(_shielded_time, time)
+
+
+func is_shielded() -> bool:
+	return _shielded_time > 0.0
+
+
 func take_damage(amount: int, _direction := Vector2.ZERO) -> void:
-	if _dead or _invincible > 0.0 or _dash_time > 0.0:
+	if _dead or _invincible > 0.0 or _dash_time > 0.0 or _shielded_time > 0.0:
+		return
+	if damage_blocks > 0: # 石盾挡掉这一下
+		damage_blocks -= 1
+		_invincible = 0.3
+		HitEffect.spawn(get_parent(), global_position + Vector2(0, -6), Color("aa8d7a"), 10, 0.8)
+		Sound.play(Sound.DEFLECT)
+		return
+	if dodge_chance > 0.0 and randf() < dodge_chance: # 疾风步：闪开了
+		_invincible = 0.3
+		HitEffect.spawn(get_parent(), global_position + Vector2(0, -6), Color("cae6f5"), 8, 0.7)
+		Sound.play(Sound.DEFLECT, -6.0)
 		return
 	_invincible = invincible_time
 	_since_hit = 0.0
@@ -330,6 +354,7 @@ func _spawn_afterimage() -> void:
 # ---------- 计时 ----------
 
 func _update_timers(delta: float) -> void:
+	_shielded_time = maxf(_shielded_time - delta, 0.0)
 	if _invincible > 0.0:
 		_invincible = maxf(_invincible - delta, 0.0)
 		sprite.visible = _invincible <= 0.0 or int(_invincible * 20.0) % 2 == 0 # 无敌时闪烁

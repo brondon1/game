@@ -15,4 +15,4 @@ max_energy = 220
 speed = 95.0
 starting_weapon = ExtResource("3_weapon")
 skill_scene = ExtResource("4_skill")
-lines = PackedStringArray("我的炮塔会自己打怪，你只要找个好位置。", "弹弹枪的子弹会在墙上弹三次，房间越小越好用。", "雷电枪的电流会在敌人之间跳来跳去，挤在一起的怪最怕它。", "法杖和魔药，都是女巫的好朋友。")
+lines = PackedStringArray("锅里的魔药快熬好了，等我一下。", "弹弹枪的子弹会在墙上弹三次，房间越小越好用。", "雷电枪的电流会在敌人之间跳来跳去，挤在一起的怪最怕它。", "法杖和魔药，都是女巫的好朋友。")

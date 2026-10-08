@@ -31,6 +31,8 @@ var poison_duration := 0.0
 var poison_damage := 1
 var chain_count := 0
 var chain_range := 70.0
+## 飞行速度倍率（法师的时间减缓结界里会变慢）
+var speed_scale := 1.0
 
 var _velocity := Vector2.ZERO
 var _range_left := 300.0
@@ -92,7 +94,7 @@ func apply_effects(data: WeaponData) -> void:
 func _physics_process(delta: float) -> void:
 	if homing > 0.0:
 		_steer(delta)
-	var step := _velocity * delta
+	var step := _velocity * delta * speed_scale
 	if bounces_left > 0 and _try_bounce(step):
 		return
 	position += step
@@ -102,6 +104,22 @@ func _physics_process(delta: float) -> void:
 			destroy() # 火箭飞到尽头也会爆
 		else:
 			queue_free()
+
+
+## 被风墙之类反弹：换成对方阵营的子弹，掉头飞回去，伤害改成 new_damage。
+func reflect(new_damage: int) -> void:
+	var to_player := team == Team.ENEMY
+	remove_from_group("enemy_bullets" if to_player else "player_bullets")
+	team = Team.PLAYER if to_player else Team.ENEMY
+	add_to_group("player_bullets" if to_player else "enemy_bullets")
+	collision_layer = LAYER_PLAYER_BULLET if to_player else LAYER_ENEMY_BULLET
+	collision_mask = LAYER_WORLD | (LAYER_ENEMY if to_player else LAYER_PLAYER)
+	sprite.texture = PLAYER_TEXTURE if to_player else ENEMY_TEXTURE
+	damage = new_damage
+	_velocity = -_velocity * 1.3
+	rotation = _velocity.angle()
+	_range_left = 300.0
+	_already_hit.clear()
 
 
 ## 反弹：先用射线看这一步会不会撞墙，会的话按墙的法线反射。

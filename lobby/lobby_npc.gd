@@ -12,6 +12,8 @@ signal talked(npc: LobbyNpc)
 @export var hframes := 1
 ## 走近时提示的动作，比如"对话""交易"
 @export var action := "对话"
+## false 时不画自己（比如书架：贴图由家具画，这里只负责互动）
+@export var show_sprite := true
 
 var _time := randf() * 4.0
 var _player: Node2D
@@ -23,11 +25,12 @@ var _player: Node2D
 
 func _ready() -> void:
 	if character:
-		texture = character.texture
+		texture = character.look()
 		hframes = character.hframes
 		display_name = character.display_name
 	sprite.texture = texture
 	sprite.hframes = hframes
+	sprite.visible = show_sprite
 	sprite.position.y = -texture.get_height() / 2.0 + 1.0 # 脚踩在节点原点上
 	name_label.text = display_name
 	prompt.text = action if TouchControls.active else "[E] " + action
@@ -35,6 +38,12 @@ func _ready() -> void:
 	BlobShadow.add_to(self)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
+
+
+## 角色换了外观（法师换流派）后刷新贴图
+func refresh_look() -> void:
+	texture = character.look()
+	sprite.texture = texture
 
 
 func _process(delta: float) -> void:

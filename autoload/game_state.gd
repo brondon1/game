@@ -70,6 +70,7 @@ const CHARACTER_PATHS: Array[String] = [
 	"res://characters/assassin.tres",
 	"res://characters/engineer.tres",
 	"res://characters/berserker.tres",
+	"res://characters/mechanic.tres",
 ]
 var characters: Array[CharacterData] = []
 ## 本局使用的角色
@@ -434,6 +435,43 @@ func next_reward_text(ch: CharacterData) -> String:
 		roundi(SKILL_COOLDOWN_PER_LEVEL * 100)]
 
 
+# ---------- 法师流派 ----------
+
+## 法师当前的流派和每个流派带的技能（流派 id → 技能下标），存档
+var mage_branch := "arcane"
+var mage_skills := {}
+
+
+func is_mage(ch: CharacterData) -> bool:
+	return ch != null and character_id(ch) == "mage"
+
+
+## 角色的外观（法师按流派换外观）
+func character_texture(ch: CharacterData) -> Texture2D:
+	return MageBranches.texture(mage_branch) if is_mage(ch) else ch.texture
+
+
+## 生成角色的技能（法师用当前流派带的那个技能）
+func create_skill(ch: CharacterData) -> Skill:
+	if is_mage(ch):
+		return MageBranches.create_skill(mage_branch, mage_skill_index())
+	return ch.skill_scene.instantiate()
+
+
+func mage_skill_index(branch := "") -> int:
+	return mage_skills.get(branch if branch != "" else mage_branch, 0)
+
+
+func set_mage_branch(id: String) -> void:
+	mage_branch = id
+	save_progress()
+
+
+func set_mage_skill(index: int) -> void:
+	mage_skills[mage_branch] = index
+	save_progress()
+
+
 ## 每升一级技能冷却缩短多少（Lv.10 一共 -36%）
 const SKILL_COOLDOWN_PER_LEVEL := 0.04
 
@@ -587,6 +625,8 @@ func save_progress() -> void:
 		cfg.set_value("trinkets", id, trinket_levels[id])
 	cfg.set_value("next_run", "weapon", next_weapon.resource_path if next_weapon else "")
 	cfg.set_value("next_run", "buffs", next_buffs)
+	cfg.set_value("mage", "branch", mage_branch)
+	cfg.set_value("mage", "skills", mage_skills)
 	cfg.save(SAVE_PATH)
 
 
@@ -611,3 +651,5 @@ func _load_record() -> void:
 		var weapon_path: String = cfg.get_value("next_run", "weapon", "")
 		next_weapon = load(weapon_path) as WeaponData if weapon_path != "" and ResourceLoader.exists(weapon_path) else null
 		next_buffs.assign(cfg.get_value("next_run", "buffs", []))
+		mage_branch = cfg.get_value("mage", "branch", "arcane")
+		mage_skills = cfg.get_value("mage", "skills", {})

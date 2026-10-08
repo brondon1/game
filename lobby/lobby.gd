@@ -22,10 +22,11 @@ const NPC_SCENE := preload("res://lobby/lobby_npc.tscn")
 const PLAYER_SCENE := preload("res://player/player.tscn")
 const PORTAL_SCENE := preload("res://dungeon/portal.tscn")
 const TORCH_SCENE := preload("res://props/torch.tscn")
-## 角色站的位置（瓦片坐标），地毯左边 3 个、右边 3 个
+## 角色站的位置（瓦片坐标），地毯左边 3 个、右边 3 个，地毯下面 1 个
 const NPC_CELLS: Array[Vector2i] = [
 	Vector2i(3, 4), Vector2i(5, 6), Vector2i(7, 4),
 	Vector2i(15, 4), Vector2i(17, 6), Vector2i(19, 4),
+	Vector2i(14, 8),
 ]
 
 # ---------- 家具 ----------
@@ -40,9 +41,11 @@ const WALL_DECOR := [
 	["window.png", Vector2(250, -28), false],
 	["painting.png", Vector2(284, -26), true],
 ]
+## 书架（也是切换法师流派的地方）
+const SHELF_POS := Vector2(326, 6)
 ## 立在地上的家具：[贴图, 底边中点（像素）, 挡路的碰撞框大小（为 0 就不挡路）]
 const FURNITURE := [
-	["bookshelf.png", Vector2(326, 6), Vector2(28, 10)],
+	["bookshelf.png", SHELF_POS, Vector2(28, 10)],
 	["plant.png", Vector2(100, 6), Vector2(12, 6)],
 	["plant.png", Vector2(298, 6), Vector2(12, 6)],
 	["plant.png", Vector2(10, 174), Vector2(12, 6)],
@@ -99,6 +102,7 @@ func _ready() -> void:
 	merchant.position = _cell_center(MERCHANT_CELL)
 	merchant.talked.connect(func(_npc: LobbyNpc) -> void: shop.open())
 	entities.add_child(merchant)
+	_add_spellbook_shelf()
 	shop.restock()
 	shop.closed.connect(_refresh)
 	_door = Sprite2D.new()
@@ -143,6 +147,21 @@ func _set_portal_open(opened: bool) -> void:
 	else:
 		_portal.hide()
 		_portal.reset()
+
+
+## 书架上放着法术书：随时都能来这里切换法师的流派和技能（正在用法师时，人群里没有法师可以对话）
+func _add_spellbook_shelf() -> void:
+	var shelf: LobbyNpc = NPC_SCENE.instantiate()
+	shelf.display_name = "法术书架"
+	shelf.texture = load(HOME + "bookshelf.png")
+	shelf.show_sprite = false
+	shelf.action = "翻阅"
+	shelf.position = SHELF_POS
+	shelf.talked.connect(func(_npc: LobbyNpc) -> void:
+		var mage: LobbyNpc = _npcs.filter(func(n: LobbyNpc) -> bool: return GameState.is_mage(n.character)).front()
+		_on_npc_talked(mage)
+		_show_mage_skill())
+	entities.add_child(shelf)
 
 
 func _cell_center(cell: Vector2i) -> Vector2:
@@ -275,9 +294,51 @@ func _npc_buttons() -> Array:
 		var can := GameState.can_upgrade(ch)
 		buttons.append(["升级：%s（%s %d 经验）" % [GameState.next_reward_text(ch), "花费" if can else "需要",
 			GameState.upgrade_cost(level)], _upgrade, not can])
+	if GameState.is_mage(ch): # 法师：切换流派、换这个流派带的技能（一次只能带一个）
+		var index := GameState.mage_skill_index()
+		var count := MageBranches.skill_count(GameState.mage_branch)
+		buttons.append(["流派：%s ▸" % MageBranches.branch_name(GameState.mage_branch), _next_branch])
+		buttons.append(["技能：%s（%d/%d）▸" % [_mage_skill_info().name, index + 1, count], _next_mage_skill])
 	buttons.append(["选这个角色", _select])
 	buttons.append(["离开", dialog.close])
 	return buttons
+
+
+# ---------- 法师流派 ----------
+
+## 当前流派带的技能：名字、说明、冷却
+func _mage_skill_info() -> Dictionary:
+	var skill := MageBranches.create_skill(GameState.mage_branch, GameState.mage_skill_index())
+	var info := {"name": skill.display_name, "desc": skill.description, "cooldown": skill.cooldown}
+	skill.free()
+	return info
+
+
+func _show_mage_skill() -> void:
+	var info := _mage_skill_info()
+	dialog.set_body("【%s】%s：%s（冷却 %d 秒）" % [MageBranches.branch_name(GameState.mage_branch), info.name, info.desc, roundi(info.cooldown)])
+	dialog.set_buttons(_npc_buttons())
+
+
+func _next_branch() -> void:
+	var i := (MageBranches.index_of(GameState.mage_branch) + 1) % MageBranches.BRANCHES.size()
+	GameState.set_mage_branch(MageBranches.BRANCHES[i][0])
+	_mage_changed()
+
+
+func _next_mage_skill() -> void:
+	GameState.set_mage_skill((GameState.mage_skill_index() + 1) % MageBranches.skill_count(GameState.mage_branch))
+	_mage_changed()
+
+
+## 换了流派或技能：对话框、法师的外观、（正在用法师的话）玩家的外观和技能都跟着换
+func _mage_changed() -> void:
+	Sound.play(Sound.CLICK, -4.0, 0.0)
+	_talking.refresh_look()
+	dialog.portrait.texture = _talking.character.icon()
+	_show_mage_skill()
+	if GameState.is_mage(GameState.character):
+		_respawn_player(player.global_position)
 
 
 func _chat() -> void:
@@ -305,15 +366,20 @@ func _upgrade() -> void:
 func _select() -> void:
 	var ch := _talking.character
 	GameState.select_character(ch)
-	var old := player
-	player = PLAYER_SCENE.instantiate()
-	player.position = _talking.position
-	entities.add_child(player)
-	player.get_node("Camera2D").enabled = false
-	old.queue_free()
+	_respawn_player(_talking.position)
 	Sound.play(Sound.PICKUP_WEAPON, 0.0, 0.0)
 	dialog.close()
 	_refresh()
+
+
+## 在 pos 换一个新的玩家节点（换角色、法师换流派后外观和技能都要重新生成）
+func _respawn_player(pos: Vector2) -> void:
+	var old := player
+	player = PLAYER_SCENE.instantiate()
+	player.position = pos
+	entities.add_child(player)
+	player.get_node("Camera2D").enabled = false
+	old.queue_free()
 
 
 # ---------- 传送门 ----------

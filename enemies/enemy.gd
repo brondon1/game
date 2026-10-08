@@ -27,6 +27,8 @@ const BULLET_SCENE := preload("res://weapons/bullet.tscn")
 
 ## 多久重新计算一次绕路路线（秒）
 const REPATH_INTERVAL := 0.25
+## 冰冻时受到的伤害倍率
+const FROZEN_DAMAGE_MULT := 1.5
 
 ## 由房间根据楼层设置，用来让后面的楼层更难
 var hp_multiplier := 1.0
@@ -44,6 +46,11 @@ var _slow_time := 0.0
 var _poison_time := 0.0
 var _poison_tick := 0.0
 var _poison_damage := 1
+## 被冰冻 / 眩晕 / 困住：这段时间里不能动、不能攻击；冰冻时受到的伤害更高
+var _stun_time := 0.0
+var _frozen := false
+## 被黑洞、龙卷风拖着走时的额外速度（每帧由技能设置）
+var _pull := Vector2.ZERO
 var _sprite_base_y := 0.0
 var _sprite_base_scale := Vector2.ONE
 
@@ -87,7 +94,12 @@ func _physics_process(delta: float) -> void:
 	if not _active or _dead:
 		return
 	var move_dir := Vector2.ZERO
-	if player and not player.is_dead():
+	if _stun_time > 0.0:
+		_stun_time -= delta
+		if _stun_time <= 0.0:
+			_frozen = false
+			sprite.self_modulate = Color.WHITE
+	elif player and not player.is_dead():
 		move_dir = _think(delta)
 		sprite.flip_h = player.global_position.x < global_position.x
 	_update_poison(delta)
@@ -97,13 +109,15 @@ func _physics_process(delta: float) -> void:
 	if _slow_time > 0.0:
 		_slow_time -= delta
 		current_speed *= 0.45
-		if _slow_time <= 0.0:
+		if _slow_time <= 0.0 and _stun_time <= 0.0:
 			sprite.self_modulate = Color.WHITE
-	velocity = move_dir * current_speed + _knockback
+	velocity = move_dir * current_speed + _knockback + _pull
+	_pull = Vector2.ZERO
 	_knockback = _knockback.move_toward(Vector2.ZERO, 900.0 * delta)
 	move_and_slide()
 	_animate(delta, move_dir)
-	_try_contact_damage()
+	if _stun_time <= 0.0:
+		_try_contact_damage()
 
 
 ## 有 8 帧动画条（4 帧待机 + 4 帧跑动）时逐帧播放；只有一张图时用挤压拉伸代替。
@@ -147,6 +161,8 @@ func chase_direction() -> Vector2:
 func take_damage(amount: int, direction := Vector2.ZERO) -> void:
 	if not is_targetable():
 		return
+	if _frozen:
+		amount = ceili(amount * FROZEN_DAMAGE_MULT)
 	hp -= amount
 	_knockback = direction * knockback_strength
 	_flash()
@@ -155,6 +171,27 @@ func take_damage(amount: int, direction := Vector2.ZERO) -> void:
 	if hp <= 0:
 		_dead = true
 		_die.call_deferred()
+
+
+## 冰冻 / 眩晕 / 困住 duration 秒：不能动也不能攻击，身上染成 tint 色。
+## frozen 为 true 时（冰冻）受到的伤害 +50%。Boss 只会被控制一半的时间。
+func apply_stun(duration: float, tint: Color, frozen := false) -> void:
+	if not is_targetable():
+		return
+	if self is Boss:
+		duration *= 0.5
+	_stun_time = maxf(_stun_time, duration)
+	_frozen = _frozen or frozen
+	sprite.self_modulate = tint
+
+
+func is_stunned() -> bool:
+	return _stun_time > 0.0
+
+
+## 被拖着走：这一帧额外加上这个速度（黑洞、龙卷风每帧调用）
+func pull(pull_velocity: Vector2) -> void:
+	_pull += pull_velocity
 
 
 ## 被冰冻类武器命中：一段时间内移动变慢，身体变成淡蓝色。
@@ -180,7 +217,7 @@ func _update_poison(delta: float) -> void:
 	if _poison_tick <= 0.0:
 		_poison_tick = 0.5
 		take_damage(_poison_damage)
-	if _poison_time <= 0.0 and _slow_time <= 0.0:
+	if _poison_time <= 0.0 and _slow_time <= 0.0 and _stun_time <= 0.0:
 		sprite.self_modulate = Color.WHITE
 
 
