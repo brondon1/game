@@ -214,7 +214,8 @@ func _on_room_cleared(room: Room) -> void:
 		hud.show_message("传送门已开启")
 		# 通过这一层：角色获得经验（回大厅找角色花经验升级，局内不会自动升级）
 		var gained := GameState.grant_floor_xp()
-		hud.show_message("经验 +%d" % gained, true)
+		var coins := GameState.grant_floor_coins()
+		hud.show_message("经验 +%d · 金币 +%d" % [gained, coins], true)
 		if GameState.can_upgrade(GameState.character):
 			hud.show_message("经验够了，回大厅找角色升级", true)
 

@@ -29,7 +29,7 @@ func open(won: bool) -> void:
 
 func _retry() -> void:
 	get_tree().paused = false
-	GameState.new_run()
+	GameState.start_run()
 	get_tree().change_scene_to_file("res://dungeon/dungeon.tscn")
 
 

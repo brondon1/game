@@ -36,6 +36,19 @@ const ITEMS := {
 ## 限时药剂的持续时间（秒）
 const BOOST_TIME := 30.0
 
+## 大厅商人卖的可升级小道具：买下是 1 级，之后可以继续升级，每级永久提升所有角色的属性（下一局生效）。
+## 升到下一级的价格 = price × 下一级的等级。新增小道具：在这里加一条，再在 new_run() 里写效果。
+const TRINKETS := {
+	"amulet": {"name": "生命护符", "desc": "初始生命 +1", "max": 5, "price": 40, "icon": preload("res://assets/sprites/trinket_amulet.png")},
+	"crystal": {"name": "能量水晶", "desc": "初始能量 +20", "max": 5, "price": 30, "icon": preload("res://assets/sprites/trinket_crystal.png")},
+	"ring": {"name": "力量戒指", "desc": "伤害 +6%", "max": 5, "price": 50, "icon": preload("res://assets/sprites/trinket_ring.png")},
+	"boots": {"name": "疾风之靴", "desc": "移速 +5%", "max": 5, "price": 35, "icon": preload("res://assets/sprites/trinket_boots.png")},
+	"lucky_coin": {"name": "幸运金币", "desc": "过关金币 +20%", "max": 5, "price": 45, "icon": preload("res://assets/sprites/trinket_lucky_coin.png")},
+}
+## 大厅商人卖的"下一局带上"的武器和增益的价格
+const NEXT_WEAPON_PRICE := 50
+const NEXT_BUFF_PRICE := 30
+
 ## 角色等级：每个角色单独升级。在地牢里每通过一层获得经验（越深越多），回到大厅和角色对话、花经验升级，
 ## 永久提升角色的初始属性（只对新开的一局生效）。LEVEL_REWARDS 的第 i 项是升到第 i + 2 级时的奖励。
 ## 只有骑士有护盾，其他角色的"初始护盾 +1"换成"初始生命 +1"（见 reward_stat()）。
@@ -111,6 +124,11 @@ var character_level := {}
 var run_xp := 0
 ## 正在生效的限时药剂：道具 id → 剩余秒数
 var boosts := {}
+## 小道具的等级（道具 id → 等级，没买过的不在里面）
+var trinket_levels := {}
+## 在大厅商人那里买的、下一局开局时生效的武器和增益（开局后清空）
+var next_weapon: WeaponData
+var next_buffs: Array[String] = []
 
 ## 设置：门关上（在打怪）时自动开火（保存在 settings.cfg，由 Sound 读写）
 var auto_fire := true
@@ -126,27 +144,40 @@ func _ready() -> void:
 	new_run()
 
 
+## 重置一局的状态（金币不清零，会一直带着）。属性 = 角色基础 + 角色等级加成 + 小道具加成。
 func new_run() -> void:
 	current_floor = 1
 	in_combat = false
-	coins = 0
 	kills = 0
 	var bonus := level_bonus(character)
-	max_hp = character.max_hp + bonus.hp
+	max_hp = character.max_hp + bonus.hp + trinket_level("amulet")
 	hp = max_hp
 	max_shield = character.max_shield + bonus.shield
 	shield = max_shield
-	max_energy = character.max_energy + bonus.energy
+	max_energy = character.max_energy + bonus.energy + 20 * trinket_level("crystal")
 	energy = max_energy
 	run_xp = 0
-	damage_mult = 1.0
+	damage_mult = 1.0 + 0.06 * trinket_level("ring")
 	fire_rate_mult = 1.0
-	speed_mult = 1.0
+	speed_mult = 1.0 + 0.05 * trinket_level("boots")
 	boosts.clear()
 	weapons = [character.starting_weapon]
 	weapon_index = 0
 	stats_changed.emit()
 	weapons_changed.emit()
+
+
+## 从大厅出发：重置一局，再加上在商人那里买的"下一局"武器和增益（用掉就没了）。
+func start_run() -> void:
+	new_run()
+	if next_weapon and not weapons.has(next_weapon):
+		weapons.append(next_weapon)
+		weapons_changed.emit()
+	for id in next_buffs:
+		apply_buff(id)
+	next_weapon = null
+	next_buffs.clear()
+	save_progress()
 
 
 # ---------- 楼层 ----------
@@ -332,7 +363,7 @@ func apply_buff(id: String) -> void:
 func select_character(ch: CharacterData) -> void:
 	character = ch
 	new_run()
-	_save()
+	save_progress()
 
 
 # ---------- 角色等级 ----------
@@ -375,7 +406,7 @@ func upgrade(ch: CharacterData) -> bool:
 	var id := character_id(ch)
 	character_xp[id] = xp_of(ch) - upgrade_cost(level_of(ch))
 	character_level[id] = level_of(ch) + 1
-	_save()
+	save_progress()
 	return true
 
 
@@ -403,13 +434,89 @@ func floor_xp(floor_number: int) -> int:
 	return 15 + 10 * floor_number
 
 
+## 通过一层奖励的金币：越深越多，幸运金币每级再多 20%
+func floor_coins(floor_number: int) -> int:
+	return roundi((10 + 5 * floor_number) * (1.0 + 0.2 * trinket_level("lucky_coin")))
+
+
+## 通过当前这一层：奖励金币并存档，返回奖励了多少
+func grant_floor_coins() -> int:
+	var gained := floor_coins(current_floor)
+	add_coins(gained)
+	save_progress()
+	return gained
+
+
 ## 通过当前这一层：给当前角色加经验并存档（回大厅再花经验升级），返回获得的经验。
 func grant_floor_xp() -> int:
 	var gained := floor_xp(current_floor)
 	character_xp[character_id(character)] = xp_of(character) + gained
 	run_xp += gained
-	_save()
+	save_progress()
 	return gained
+
+
+# ---------- 大厅商人 ----------
+
+func trinket_level(id: String) -> int:
+	return trinket_levels.get(id, 0)
+
+
+## 买下（0 级 → 1 级）或升一级的价格；满级返回 -1
+func trinket_price(id: String) -> int:
+	var level := trinket_level(id)
+	if level >= TRINKETS[id].max:
+		return -1
+	return TRINKETS[id].price * (level + 1)
+
+
+func buy_trinket(id: String) -> bool:
+	var price := trinket_price(id)
+	if price < 0 or not spend_coins(price):
+		return false
+	trinket_levels[id] = trinket_level(id) + 1
+	save_progress()
+	return true
+
+
+## 下一局开局带上这把武器（只能预定一把，再买会换掉之前的）
+func buy_next_weapon(weapon: WeaponData) -> bool:
+	if not spend_coins(NEXT_WEAPON_PRICE):
+		return false
+	next_weapon = weapon
+	save_progress()
+	return true
+
+
+## 下一局开局获得这个强化（每种只能买一次）
+func buy_next_buff(id: String) -> bool:
+	if next_buffs.has(id) or not spend_coins(NEXT_BUFF_PRICE):
+		return false
+	next_buffs.append(id)
+	save_progress()
+	return true
+
+
+## 商人今天进的货：几把随机武器（不含当前角色的初始武器）和几个随机增益（不含"急救包"，开局用不上）
+func merchant_weapons(count: int) -> Array[WeaponData]:
+	var pool := weapon_pool.filter(func(w: WeaponData) -> bool: return w != character.starting_weapon)
+	pool.shuffle()
+	var result: Array[WeaponData] = []
+	result.assign(pool.slice(0, count))
+	return result
+
+
+func merchant_buffs(count: int) -> Array:
+	var pool := BUFFS.filter(func(b: Dictionary) -> bool: return b.id != "heal")
+	pool.shuffle()
+	return pool.slice(0, count)
+
+
+func buff_name(id: String) -> String:
+	for b: Dictionary in BUFFS:
+		if b.id == id:
+			return b.name
+	return id
 
 
 # ---------- 存档 ----------
@@ -418,10 +525,11 @@ func record_run(won: bool) -> void:
 	best_floor = maxi(best_floor, current_floor)
 	if won:
 		wins += 1
-	_save()
+	save_progress()
 
 
-func _save() -> void:
+## 存档：纪录、角色经验和等级、金币、小道具、下一局的预定
+func save_progress() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("record", "best_floor", best_floor)
 	cfg.set_value("record", "wins", wins)
@@ -430,6 +538,11 @@ func _save() -> void:
 		cfg.set_value("xp", id, character_xp[id])
 	for id: String in character_level:
 		cfg.set_value("level", id, character_level[id])
+	cfg.set_value("record", "coins", coins)
+	for id: String in trinket_levels:
+		cfg.set_value("trinkets", id, trinket_levels[id])
+	cfg.set_value("next_run", "weapon", next_weapon.resource_path if next_weapon else "")
+	cfg.set_value("next_run", "buffs", next_buffs)
 	cfg.save(SAVE_PATH)
 
 
@@ -446,3 +559,11 @@ func _load_record() -> void:
 			for id in cfg.get_section_keys("level"):
 				character_level[id] = cfg.get_value("level", id, 1)
 		character = characters[clampi(index, 0, characters.size() - 1)]
+		coins = cfg.get_value("record", "coins", 0)
+		if cfg.has_section("trinkets"):
+			for id in cfg.get_section_keys("trinkets"):
+				if TRINKETS.has(id):
+					trinket_levels[id] = cfg.get_value("trinkets", id, 0)
+		var weapon_path: String = cfg.get_value("next_run", "weapon", "")
+		next_weapon = load(weapon_path) as WeaponData if weapon_path != "" and ResourceLoader.exists(weapon_path) else null
+		next_buffs.assign(cfg.get_value("next_run", "buffs", []))

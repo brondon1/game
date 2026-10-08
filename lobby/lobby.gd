@@ -1,6 +1,7 @@
 extends Node2D
-## 大厅（游戏启动后的第一个场景）：所有角色都站在这里。
+## 大厅（游戏启动后的第一个场景）：所有角色和商人都站在这里。
 ## - 走近角色按 E（手机上点手形按钮）对话：聊天、花经验升级、选这个角色
+## - 走近商人按 E 交易：用金币买可升级的小道具、下一局带上的武器和增益
 ## - 走进上方的传送门：开始游戏 / 退出游戏
 
 const TILE_SIZE := 16
@@ -8,6 +9,8 @@ const TILE_SIZE := 16
 const ROOM := Rect2i(0, 0, 22, 12)
 ## 传送门和玩家出生点（瓦片坐标）
 const PORTAL_CELL := Vector2i(11, 2)
+const MERCHANT_CELL := Vector2i(3, 10)
+const MERCHANT_TEXTURE := preload("res://assets/sprites/merchant_idle.png")
 const START_CELL := Vector2i(11, 10)
 ## 大厅不大，用一个固定的镜头一次看全（屏幕上方留出左上角信息栏的位置）
 const CAMERA_CENTER := Vector2(176, 78)
@@ -32,6 +35,7 @@ var _portal: Portal
 @onready var entities: Node2D = $Entities
 @onready var player: Player = $Entities/Player
 @onready var dialog: LobbyDialog = $LobbyDialog
+@onready var shop: MerchantShop = $MerchantShop
 @onready var info: Label = %Info
 @onready var hint: Label = %Hint
 @onready var camera: Camera2D = $Camera2D
@@ -48,6 +52,16 @@ func _ready() -> void:
 		npc.talked.connect(_on_npc_talked)
 		entities.add_child(npc)
 		_npcs.append(npc)
+	var merchant: LobbyNpc = NPC_SCENE.instantiate()
+	merchant.display_name = "商人"
+	merchant.texture = MERCHANT_TEXTURE
+	merchant.hframes = 4
+	merchant.action = "交易"
+	merchant.position = _cell_center(MERCHANT_CELL)
+	merchant.talked.connect(func(_npc: LobbyNpc) -> void: shop.open())
+	entities.add_child(merchant)
+	shop.restock()
+	shop.closed.connect(_refresh)
 	_portal = PORTAL_SCENE.instantiate()
 	_portal.position = _cell_center(PORTAL_CELL)
 	_portal.player_entered.connect(_on_portal_entered)
@@ -57,8 +71,8 @@ func _ready() -> void:
 	camera.position = CAMERA_CENTER
 	camera.make_current()
 	_refresh()
-	hint.text = ("左边拖动移动 · 靠近角色点手形按钮对话 · 走进传送门出发" if TouchControls.active
-		else "WASD 移动 · 靠近角色按 E 对话 · 走进传送门出发")
+	hint.text = ("左边拖动移动 · 手形按钮和角色对话、找商人交易 · 走进传送门出发" if TouchControls.active
+		else "WASD 移动 · E 和角色对话、找商人交易 · 走进传送门出发")
 	Sound.play_music(Sound.MUSIC_DUNGEON)
 
 
@@ -81,13 +95,13 @@ func _build_room() -> void:
 		decor_root.add_child(torch)
 
 
-## 当前角色不站在人群里（玩家就是他）；左上角显示当前角色的等级和经验
+## 当前角色不站在人群里（玩家就是他）；左上角显示当前角色的等级、经验和金币
 func _refresh() -> void:
 	for npc in _npcs:
 		npc.visible = npc.character != GameState.character
 		npc.monitoring = npc.visible
 	var ch := GameState.character
-	info.text = "%s　Lv.%d · 经验 %d" % [ch.display_name, GameState.level_of(ch), GameState.xp_of(ch)]
+	info.text = "%s　Lv.%d · 经验 %d · 金币 %d" % [ch.display_name, GameState.level_of(ch), GameState.xp_of(ch), GameState.coins]
 
 
 # ---------- 和角色对话 ----------
@@ -174,7 +188,7 @@ func _on_portal_entered() -> void:
 
 func _start() -> void:
 	dialog.close()
-	GameState.new_run()
+	GameState.start_run() # 带上在商人那里买的武器和增益
 	get_tree().change_scene_to_file("res://dungeon/dungeon.tscn")
 
 

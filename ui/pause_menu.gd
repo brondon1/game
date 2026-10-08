@@ -53,5 +53,6 @@ func _resume() -> void:
 
 func _to_main_menu() -> void:
 	Sound.save_settings()
+	GameState.save_progress() # 金币会带回大厅
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://lobby/lobby.tscn")

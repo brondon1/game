@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://ui/lobby_dialog.tscn" id="4_dialog"]
 [ext_resource type="PackedScene" path="res://ui/touch_controls.tscn" id="5_touch"]
 [ext_resource type="Shader" path="res://common/vignette.gdshader" id="6_vignette"]
+[ext_resource type="PackedScene" path="res://ui/merchant_shop.tscn" id="7_shop"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("6_vignette")
@@ -80,10 +81,12 @@ offset_right = 200.0
 offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "WASD 移动 · 靠近角色按 E 对话 · 走进传送门出发"
+text = "WASD 移动 · E 和角色对话、找商人交易 · 走进传送门出发"
 horizontal_alignment = 1
 
 [node name="TouchControls" parent="UI" instance=ExtResource("5_touch")]
 show_top_buttons = false
 
 [node name="LobbyDialog" parent="." instance=ExtResource("4_dialog")]
+
+[node name="MerchantShop" parent="." instance=ExtResource("7_shop")]
